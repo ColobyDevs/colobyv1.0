@@ -49,7 +49,7 @@ This is a collaborative web application designed to streamline project managemen
 
 1. Clone the repository to your local development environment.
 2. Set up a virtual environment and install dependencies using `pip`.
-3. Configure the PostgreSQL database and run migrations.
+3. Configure the database and run migrations.
 4. Start the development server using `python manage.py runserver`.
 5. Access the application in your web browser at `http://localhost:8000/`.
 
@@ -59,7 +59,7 @@ We welcome contributions from the open-source community. If you would like to co
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+This project is licensed under the BSD License - see the LICENSE.md file for details.
 
 ## Acknowledgments
 
