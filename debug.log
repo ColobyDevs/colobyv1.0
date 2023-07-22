@@ -1,0 +1,46 @@
+INFO 2023-07-22 14:41:57,831 Watching for file changes with StatReloader
+INFO 2023-07-22 14:44:52,070 Watching for file changes with StatReloader
+INFO 2023-07-22 14:44:56,667 "GET /login/ HTTP/1.1" 200 624
+INFO 2023-07-22 14:58:29,814 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\urls.py changed, reloading.
+INFO 2023-07-22 14:58:33,122 Watching for file changes with StatReloader
+INFO 2023-07-22 14:58:36,182 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\urls.py changed, reloading.
+INFO 2023-07-22 14:58:39,499 Watching for file changes with StatReloader
+INFO 2023-07-22 14:59:06,671 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\urls.py changed, reloading.
+INFO 2023-07-22 14:59:08,030 Watching for file changes with StatReloader
+INFO 2023-07-22 14:59:20,259 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\views.py changed, reloading.
+INFO 2023-07-22 14:59:23,212 Watching for file changes with StatReloader
+INFO 2023-07-22 14:59:42,732 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\views.py changed, reloading.
+INFO 2023-07-22 14:59:45,082 Watching for file changes with StatReloader
+INFO 2023-07-22 14:59:58,199 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\urls.py changed, reloading.
+INFO 2023-07-22 15:00:00,252 Watching for file changes with StatReloader
+INFO 2023-07-22 15:00:03,052 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\urls.py changed, reloading.
+INFO 2023-07-22 15:00:06,700 Watching for file changes with StatReloader
+INFO 2023-07-22 15:00:13,150 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\urls.py changed, reloading.
+INFO 2023-07-22 15:00:14,860 Watching for file changes with StatReloader
+INFO 2023-07-22 15:01:23,135 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\urls.py changed, reloading.
+INFO 2023-07-22 15:01:26,716 Watching for file changes with StatReloader
+INFO 2023-07-22 15:01:30,655 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\urls.py changed, reloading.
+INFO 2023-07-22 15:01:33,194 Watching for file changes with StatReloader
+INFO 2023-07-22 15:01:36,027 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\urls.py changed, reloading.
+INFO 2023-07-22 15:01:38,389 Watching for file changes with StatReloader
+ERROR 2023-07-22 15:03:02,897 Internal Server Error: /register/
+Traceback (most recent call last):
+  File "C:\Users\USER\Documents\Tech Stuff\colobyv1.0\env\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\USER\Documents\Tech Stuff\colobyv1.0\env\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\views.py", line 21, in register
+    return render(request, 'register.html', {'form': form})
+  File "C:\Users\USER\Documents\Tech Stuff\colobyv1.0\env\lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\USER\Documents\Tech Stuff\colobyv1.0\env\lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\USER\Documents\Tech Stuff\colobyv1.0\env\lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: register.html
+ERROR 2023-07-22 15:03:02,901 "GET /register/ HTTP/1.1" 500 82672
+INFO 2023-07-22 15:03:15,636 C:\Users\USER\Documents\Tech Stuff\colobyv1.0\accounts\views.py changed, reloading.
+INFO 2023-07-22 15:03:18,742 Watching for file changes with StatReloader
+INFO 2023-07-22 15:03:54,324 "GET /register/ HTTP/1.1" 200 1373
+WARNING 2023-07-22 15:03:55,314 Not Found: /favicon.ico
+INFO 2023-07-22 15:03:55,315 - Broken pipe from ('127.0.0.1', 53380)
