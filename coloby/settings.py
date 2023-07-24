@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'accounts',
     'allauth',
     'allauth.account',
@@ -47,7 +48,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
 
     'crispy_forms',
-    'user_visit',
+    'cowork',
+    # 'user_visit',
 ]
 
 MIDDLEWARE = [
@@ -58,7 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'user_visit.middleware.UserVisitMiddleware',
+    # 'user_visit.middleware.UserVisitMiddleware',
 ]
 
 ROOT_URLCONF = 'coloby.urls'
@@ -120,7 +122,7 @@ AUTHENTICATION_BACKENDS = [
 # Set login and logout URLs
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
-LOGIN_REDIRECT_URL = 'home' 
+LOGIN_REDIRECT_URL = '/' 
 
 PASSWORD_RESET_URL = 'password_reset'
 PASSWORD_RESET_DONE_URL = 'password_reset_done'
@@ -129,6 +131,8 @@ PASSWORD_RESET_COMPLETE_URL = 'password_reset_complete'
 PASSWORD_CHANGE_URL = 'password_change'
 PASSWORD_CHANGE_DONE_URL = 'password_change_done'
 
+
+SITE_ID = 2
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
