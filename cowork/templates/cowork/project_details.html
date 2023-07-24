@@ -1,0 +1,18 @@
+<!-- project_detail.html -->
+
+<h2>{{ project.name }}</h2>
+<p>Admin: {{ project.admin.username }}</p>
+<p>Members:</p>
+<ul>
+  {% for user_name in project.get_users_names %}
+    <li>{{ user_name }}</li>
+  {% endfor %}
+</ul>
+{% if request.user in project.users.all %}
+  <p>You are already a member of this project.</p>
+{% else %}
+  <form action="{% url 'join_project' project.id %}" method="post">
+    {% csrf_token %}
+    <button type="submit">Join Project</button>
+  </form>
+{% endif %}
