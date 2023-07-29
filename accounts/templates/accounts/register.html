@@ -1,9 +1,0 @@
-<!-- register.html -->
-
-<h2>Register</h2>
-<p>Complete the form to create an account.</p>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Register</button>
-</form>
