@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block base %}
+<form method='post' action='{% url "room-create" %}'>
+        {% csrf_token %}
+        <input name='room_name' id='room_name' placeholder='Room Name'>
+        <input type='submit' id="submit">
+    </form>
+{% endblock %}
