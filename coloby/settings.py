@@ -20,7 +20,7 @@ INSTALLED_APPS = [
     "channels",
 
     "accounts",
-    "chat",
+    "cowork",
 ]
 
 MIDDLEWARE = [

@@ -3,7 +3,7 @@ import random
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, reverse, redirect
 from django.utils.text import slugify
-from chat.models import Room
+from cowork.models import Room
 
 
 @login_required

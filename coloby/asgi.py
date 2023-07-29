@@ -5,7 +5,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'coloby.settings')
 
-from chat import routing
+from cowork import routing
 
 
 application = ProtocolTypeRouter({

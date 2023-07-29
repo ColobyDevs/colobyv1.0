@@ -3,7 +3,7 @@ import json
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from chat.models import Room, Message
+from cowork.models import Room, Message
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
