@@ -4,6 +4,10 @@ from django.core.files import File
 # from django.contrib.auth.models import User
 from accounts.models import User
 from cowork.models import UploadedFile, Room
+from django.core.management import execute_from_command_line
+
+
+
 class Command(BaseCommand):
     help = 'Upload files or folders from the command-line'
 

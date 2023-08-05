@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-q8$1^k7t36@2_o#ddypqs2xn(0vsn07y6g@ynj_gq9zzo$_)2)"
@@ -39,7 +39,11 @@ ROOT_URLCONF = "coloby.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["templates",],
+        "DIRS": [
+            
+            os.path.join(BASE_DIR, "frontend/build"),
+            
+                 ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
