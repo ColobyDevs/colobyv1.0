@@ -3,3 +3,7 @@ env/
 __pycache__/
 
 migrations/
+
+.pyc
+
+node_modules/

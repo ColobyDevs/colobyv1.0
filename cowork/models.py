@@ -37,7 +37,7 @@ class Task(models.Model):
 
 class UploadedFile(models.Model):
     file = models.FileField(upload_to='uploads/')
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)  # Add this foreign key to Room
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
@@ -45,10 +45,11 @@ class UploadedFile(models.Model):
     def __str__(self):
         return self.file.name
 
+
 class FileAccessLog(models.Model):
     file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
     accessed_by = models.ForeignKey(User, on_delete=models.CASCADE)
     accessed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.accessed_by.username} accessed {self.file.file.name} at {self.accessed_at} in {self.room.name}"
+        return f"{self.accessed_by.username} accessed {self.file.name} at {self.accessed_at} in {self.room.name}"
