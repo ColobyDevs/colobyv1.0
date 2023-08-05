@@ -13,7 +13,7 @@ This is a collaborative web application designed to streamline project managemen
 
 ### 2. Code Repository
 - Host and manage code repositories for collaborative coding.
-- Support for version control with Git.
+- Support for version control like Git.
 - Branching and merging capabilities.
 - Review code changes and conduct code reviews.
 - Integrated code documentation.
