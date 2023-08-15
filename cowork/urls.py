@@ -8,6 +8,8 @@ urlpatterns = [
     path("chat/room/<str:slug>/", views.index, name='chat'),
     path("create/", views.room_create, name='room-create'),
     path("join/", views.room_join, name='room-join'),
+    # path('post_message/', views.post_message, name='post-message'),
+
     path('chat/<slug:slug>/create_task/', views.create_task, name='create_task'),
     path('chat/<str:slug>/update_task/<int:task_id>/', views.update_task, name='update_task'),
     path('chat/<str:slug>/delete_task/<int:task_id>/', views.delete_task, name='delete_task'),

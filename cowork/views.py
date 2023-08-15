@@ -6,15 +6,16 @@ from django.utils.text import slugify
 import string
 import random
 from cowork.models import Room
-from .models import Task
+from .models import Task, Message
 from .forms import TaskForm
 
 
 @login_required
 def index(request, slug):
     room = Room.objects.get(slug=slug)
+    messages = Message.objects.filter(room=room).order_by('created_at')
     tasks = Task.objects.filter(room=room)
-    return render(request, 'chat/room.html', {'name': room.name, 'slug': room.slug, 'tasks': tasks})
+    return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks})
 
 
 @login_required

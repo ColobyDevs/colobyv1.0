@@ -16,23 +16,78 @@
             </li>
         {% endfor %}
     </ul>
-    {# <div hx-ws="connect:/chat/{{ slug }}/"> #}
-    <!--
-        <form hx-ws="send:submit">
-            <input name="message">
-            <input type="submit">
-        </form>  
+    
+    <div id="chat-messages">
+        {% regroup messages by created_at|date:"F j, Y" as message_groups %}
+        {% for group in message_groups %}
+            <div class="message-group">
+                <div class="date-header">{{ group.grouper }}</div>
+                {% for message in group.list %}
+                    <div class="message">
+                        <span class="username">{{ message.user.username }}:</span>
+                        <span class="content">{{ message.message }}</span>
+                        <span class="time">{{ message.created_at|date:"g:i a" }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
     </div>
-    -->
-    <div ws-connect="/chat/{{ slug }}/">
-        <form ws-send>
-            <input name="message">
+    
+    <div hx-target="this" hx-swap="outerHTML" ws-connect="/chat/{{ slug }}/">
+        <div id="messages">
+            {% for message in messages %}
+                <div>{{ message.user.username }}: {{ message.message }}</div>
+            {% endfor %}
+        </div>
+        <form hx-post="." ws-send>
+            {% csrf_token %}
+            <input name="message" placeholder="Type your message..." autocomplete="off">
+            <button type="submit">Send</button>
         </form>
-        
-
-        {% for message in messages %}
-         <div id='messages'></div>
-         {{ message }}
-         {%endfor%}
     </div>
-{% endblock %}
+    
+    <script>
+        const chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/chat/{{ slug }}/'
+        );
+    
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${data.username}: ${data.message}`;
+            messagesDiv.appendChild(messageElement);
+            // Automatically scroll to the bottom to show the latest message
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        };
+    
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+    
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const messageInput = document.querySelector('input[name="message"]');
+            const message = messageInput.value.trim();
+            if (message) {
+                chatSocket.send(JSON.stringify({
+                    'message': message
+                }));
+                messageInput.value = '';
+            }
+        });
+
+        
+    // Refresh the chat periodically
+    const refreshInterval = 5000; // 5 seconds
+    setInterval(refreshChat, refreshInterval);
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    
+   {% endblock %}
+   
+
+
+
