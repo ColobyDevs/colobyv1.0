@@ -41,7 +41,7 @@ This is a collaborative web application designed to streamline project managemen
 ## Technologies Used
 
 - Backend: Django (Python) framework for robust and scalable server-side development.
-- Frontend: HTML, CSS, and JavaScript for building a responsive and user-friendly UI/UX.
+- Frontend: React for building a responsive and user-friendly UI/UX.
 - Database: SQLite for development.
 - AI: Integration with OpenAI's GPT-3 for AI personal assistant capabilities.
 
