@@ -7,7 +7,7 @@ import string
 import random
 from cowork.models import Room
 from .models import Task, Message
-from .forms import TaskForm
+from .forms import TaskForm, CommentForm
 
 
 @login_required
@@ -74,6 +74,23 @@ def update_task(request, slug, task_id):
     return render(request, 'chat/update_task.html', {'form': form, 'room': room, 'task': task})
 
 
+
+@login_required
+def comment_form(request, slug, task_id):
+    room = get_object_or_404(Room, slug=slug)
+    task = get_object_or_404(Task, pk=task_id)
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST, instance=task)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+    else:
+        form = CommentForm(instance=task)
+        
+    return render(request, 'chat/comment.html', {'form':form, 'room': room, 'task': task})
+
+    
 @login_required
 def delete_task(request, slug, task_id):
     room = get_object_or_404(Room, slug=slug)

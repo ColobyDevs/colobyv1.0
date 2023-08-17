@@ -11,6 +11,7 @@ urlpatterns = [
     # path('post_message/', views.post_message, name='post-message'),
 
     path('chat/<slug:slug>/create_task/', views.create_task, name='create_task'),
+    path('chat/<slug:slug>/comment/<int:task_id>/', views.comment_form, name='comment_task'),
     path('chat/<str:slug>/update_task/<int:task_id>/', views.update_task, name='update_task'),
     path('chat/<str:slug>/delete_task/<int:task_id>/', views.delete_task, name='delete_task'),
     path('chat/upload/<str:room_slug>/', views.upload_file, name='upload_file'),
