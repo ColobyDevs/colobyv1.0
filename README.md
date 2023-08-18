@@ -1,6 +1,6 @@
 # colobyv1.0
 
-This is a collaborative web application designed to streamline project management, foster team communication, and boost productivity. It integrates multiple features, including task management, code repository, an AI personal assistant, event management, and forums, to provide a comprehensive platform for effective collaboration.
+This collaborative web application is designed to streamline project management, foster team communication, and boost productivity. It integrates multiple features, including task management, a code or file repository, an AI personal assistant, event management, and forums, to provide a comprehensive platform for effective collaboration.
 
 ## Features
 
@@ -12,11 +12,11 @@ This is a collaborative web application designed to streamline project managemen
 - Receive notifications for task updates.
 
 ### 2. Code Repository
-- Host and manage code repositories for collaborative coding.
+- Host and manage repositories for collaboration.
 - Support for version control like Git.
 - Branching and merging capabilities.
-- Review code changes and conduct code reviews.
-- Integrated code documentation.
+- Review file changes and conduct file reviews.
+- Integrated file documentation.
 
 ### 3. AI Personal Assistant
 - AI-powered personal assistant to help with task reminders, scheduling, and team communication.
