@@ -40,11 +40,7 @@ ROOT_URLCONF = "coloby.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            'templates'
-            # os.path.join(BASE_DIR, "frontend/build"),
-            
-                 ],
+        "DIRS": ["templates",],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
