@@ -21,6 +21,7 @@ INSTALLED_APPS = [
 
     "accounts",
     "cowork",
+    # "commands",
 
 ]
 
@@ -40,8 +41,8 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            
-            os.path.join(BASE_DIR, "frontend/build"),
+            'templates'
+            # os.path.join(BASE_DIR, "frontend/build"),
             
                  ],
         "APP_DIRS": True,
@@ -91,9 +92,13 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
+
 STATICFILES_DIRS = [
     BASE_DIR / "static",
+    #  os.path.join(BASE_DIR, "frontend/build/static"),
 ]
+
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
