@@ -1,0 +1,9 @@
+<h2>Uploaded Files for Room: {{ room.name }}</h2>
+<ul>
+    {% for uploaded_file in uploaded_files %}
+        <li>
+            <a href="{% url 'file_access_log' uploaded_file.id %}">{{ uploaded_file.file.name }}</a>
+            - Uploaded by {{ uploaded_file.uploaded_by.username }} at {{ uploaded_file.uploaded_at }}
+        </li>
+    {% endfor %}
+</ul>

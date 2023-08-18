@@ -1,0 +1,7 @@
+file_uploader.py
+setup.py
+colup.egg-info/PKG-INFO
+colup.egg-info/SOURCES.txt
+colup.egg-info/dependency_links.txt
+colup.egg-info/requires.txt
+colup.egg-info/top_level.txt

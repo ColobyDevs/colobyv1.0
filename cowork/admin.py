@@ -1,11 +1,15 @@
 from django.contrib import admin
-from .models import Project, Task
+from .models import *
 # Register your models here.
 
 
-admin.site.site_header = "Coloby Admin"
-admin.site.site_title = "Coloby Admin Area"
-admin.site.index_title = "Welcome to the Coloby Admin Area"
+admin.site.site_header = 'Coloby Admin'
+admin.site.site_title = 'Coloby Admin'
 
-admin.site.register(Project)
+admin.site.register(Message)
+admin.site.register(Room)
 admin.site.register(Task)
+admin.site.register(Comment)
+admin.site.register(User)
+
+

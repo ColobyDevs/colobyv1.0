@@ -1,0 +1,6 @@
+<h2>Access Logs for File: {{ uploaded_file.file.name }}</h2>
+<ul>
+    {% for access_log in access_logs %}
+        <li>{{ access_log.accessed_by.username }} accessed at {{ access_log.accessed_at }}</li>
+    {% endfor %}
+</ul>
