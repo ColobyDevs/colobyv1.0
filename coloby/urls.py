@@ -6,5 +6,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("auth/", include('accounts.urls')),
     path("", include('cowork.urls')),
-    path('', TemplateView.as_view('template_name='index.html)),
+    path('views', TemplateView.as_view(template_name='index.html')),
 ]
