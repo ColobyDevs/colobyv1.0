@@ -2,8 +2,22 @@ env/
 
 __pycache__/
 
+/__pycache__/
+
 migrations/
 
 .pyc
 
 node_modules/
+
+uploads/
+
+dist/
+
+file_transfer_tool.egg-info/
+
+management/
+
+build/
+
+colup.egg-info/

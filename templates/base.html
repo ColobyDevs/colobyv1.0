@@ -23,14 +23,14 @@
     {% endif %}
 </div>
 
-<body hx-ext="ws" class="container">
-    {% if messages %}
+<body  class="container">
+    {% comment %} {% if messages %}
     {% for message in messages %}
     <div class="alert alert-{{ message.tags }}">
         {{ message }}
     </div>
     {% endfor %}
-    {% endif %}
+    {% endif %} {% endcomment %}
     <br>
     <h1>Coloby</h1>
     {% block base %}

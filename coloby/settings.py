@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-q8$1^k7t36@2_o#ddypqs2xn(0vsn07y6g@ynj_gq9zzo$_)2)"
@@ -21,6 +21,7 @@ INSTALLED_APPS = [
 
     "accounts",
     "cowork",
+    # "commands",
 
 ]
 
@@ -39,9 +40,7 @@ ROOT_URLCONF = "coloby.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            "templates",
-            ],
+        "DIRS": ["templates",],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -89,9 +88,13 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
+
 STATICFILES_DIRS = [
     BASE_DIR / "static",
+    #  os.path.join(BASE_DIR, "frontend/build/static"),
 ]
+
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
