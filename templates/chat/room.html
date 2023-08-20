@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block base %}
     <h2>{{ name }}</h2>
@@ -45,7 +46,7 @@
                     <div class="message">
                         <span class="username">{{ message.user.username }}:</span>
                         <span class="content">{{ message.message }}</span>
-                        <span class="time">{{ message.created_at|date:"g:i a" }}</span>
+                        <span class="time">{{ message.created_at|naturaltime }}</span>
                     </div>
                 {% endfor %}
             </div>
@@ -56,7 +57,9 @@
      
         <form hx-post="." ws-send>
             {% csrf_token %}
+            
             <input name="message" placeholder="Type your message..." autocomplete="off">
+            
             <button type="submit">Send</button>
         </form>
     </div>

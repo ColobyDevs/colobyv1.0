@@ -4,8 +4,7 @@ __pycache__/
 
 /__pycache__/
 
-migrations/
-
+.pyc/
 .pyc
 
 node_modules/

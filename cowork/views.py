@@ -15,6 +15,7 @@ def index(request, slug):
     room = Room.objects.get(slug=slug)
     messages = Message.objects.filter(room=room).order_by('created_at')
     tasks = Task.objects.filter(room=room)
+    
     return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks})
 
 
@@ -56,6 +57,7 @@ def create_task(request, slug):
         form = TaskForm()
 
     return render(request, 'chat/create_task.html', {'form': form, 'room': room})
+
 
 
 @login_required
