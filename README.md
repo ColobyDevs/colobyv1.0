@@ -42,7 +42,7 @@ This collaborative web application is designed to streamline project management,
 
 - Backend: Django (Python) framework for robust and scalable server-side development.
 - Frontend: React for building a responsive and user-friendly UI/UX.
-- Database: SQLite for development.
+- Database: SQLite/MongoDB for development.
 - AI: Integration with OpenAI's GPT-3 for AI personal assistant capabilities.
 
 ## Getting Started
