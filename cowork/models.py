@@ -6,6 +6,7 @@ class Room(models.Model):
     name = models.CharField(max_length=128)
     slug = models.SlugField(unique=True)
     users = models.ManyToManyField(User)
+    is_private = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name

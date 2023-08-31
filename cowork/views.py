@@ -10,26 +10,45 @@ from .models import Task, Message
 from .forms import TaskForm, CommentForm
 
 
+# private room
 @login_required
 def index(request, slug):
     room = Room.objects.get(slug=slug)
     messages = Message.objects.filter(room=room).order_by('created_at')
+    # public_projects = Room.objects.filter(is_private=False)
     tasks = Task.objects.filter(room=room)
     
     return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks})
+
+
+# public room
+@login_required
+def public_chat(request, slug):
+    room = get_object_or_404(Room, slug=slug, is_private=False)
+    public_projects = Room.objects.filter(is_private=False)
+    messages = Message.objects.filter(room=room).order_by('created_at')
+    tasks = Task.objects.filter(room=room)
+    return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks, 'public_projects':public_projects})
 
 
 @login_required
 def room_create(request):
     if request.method == "POST":
         room_name = request.POST["room_name"]
+        is_private = request.POST.get("is_private") == "on"  # Check if the room should be private
+
         uid = str(''.join(random.choices(
             string.ascii_letters + string.digits, k=4)))
         room_slug = slugify(room_name + "_" + uid)
-        room = Room.objects.create(name=room_name, slug=room_slug)
-        return redirect(reverse('chat', kwargs={'slug': room.slug}))
-    else:
-        return render(request, 'chat/create.html')
+        room = Room.objects.create(name=room_name, slug=room_slug, is_private=is_private)
+
+        if is_private:
+            return redirect(reverse('chat', kwargs={'slug': room.slug}))
+        else:
+            return redirect(reverse('chat', kwargs={'slug': room.slug}))
+
+    return render(request, 'chat/create.html')
+
 
 
 @login_required
