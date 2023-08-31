@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block base %}
+<form method='post' action='{% url "room-create" %}'>
+        {% csrf_token %}
+        <input name='room_name' id='room_name' placeholder='Room Name'>
+
+        <label for="is_private">Private:</label>
+    <input type="checkbox" id="is_private" name="is_private">
+        <input type='submit' id="submit">
+    </form>
+
+    {% for project in public_projects %}
+            <li><a href="{% url 'public-chat' room.slug %}">{{ room.name }}</a></li>
+        {% endfor %}
+{% endblock %}

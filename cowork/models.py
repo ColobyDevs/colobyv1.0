@@ -6,44 +6,73 @@ import uuid
 from django.contrib.auth.models import User
 import shortuuid
 from django.contrib.auth import get_user_model
+from accounts.models import User
 
 User = get_user_model()
 
-
-class Project(models.Model):
-    id = models.UUIDField(primary_key = True, default=uuid.uuid4, editable=False)
+class Room(models.Model):
+    name = models.CharField(max_length=128)
+    slug = models.SlugField(unique=True)
     users = models.ManyToManyField(User)
-    name = models.CharField(max_length=40, unique=True)
-    admin = models.ForeignKey(User, on_delete= models.CASCADE, related_name='admins')
-    token = models.CharField(max_length=6, unique=True, default=shortuuid.ShortUUID().random)
+    is_private = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.name + ' (' + self.admin.username + ')'
+        return self.name
 
 
-    # def save(
-    #       self, force_insert=False, force_update=False,
-    #        using=None, first_time=False):
-    #   if not first_time:
-    #        self.users.add(self)
-    #   super().save()
+class Message(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    media = models.FileField(upload_to='media', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    def get_users_names(self):
-        for user in self.users.all():
-            yield user.username
+    def __str__(self):
+        return (self.room.name + " - " + str(self.user.username) + " : " + str(self.message))
 
-    def get_channels(self):
-        channels = self.channels.all()
-        return channels
 
 class Task(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.RESTRICT)
+    # RESTRICT will delete the task if its parent is deleted
     title = models.CharField(max_length=100)
     description = models.TextField()
-    due_date = models.DateField()
-    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     completed = models.BooleanField(default=False)
+    due_date = models.DateTimeField()
+    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+    
 
+class Comment(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.task.title}"
+
+
+
+
+
+class UploadedFile(models.Model):
+    file = models.FileField(upload_to='uploads/')
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)  # Add this foreign key to Room
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.file.name
+
+
+class FileAccessLog(models.Model):
+    file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
+    accessed_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    accessed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.accessed_by.username} accessed {self.file.name} at {self.accessed_at} in {self.room.name}"

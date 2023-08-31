@@ -1,0 +1,16 @@
+  <!-- Add a new comment -->
+  
+  <h3>Comments for {{ task.title }}:</h3>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Comment</button>
+</form>
+
+
+{% for comment in task.comment_set.all %}
+<li>
+    <p>{{ comment.text }}</p>
+    <p>By {{ comment.user.username }} at {{ comment.created_at }}</p>
+</li>
+{% endfor %}
