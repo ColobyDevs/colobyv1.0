@@ -1,6 +1,14 @@
 from django.db import models
+
+# Create your models here.
+from django.utils import timezone
+import uuid
+from django.contrib.auth.models import User
+import shortuuid
+from django.contrib.auth import get_user_model
 from accounts.models import User
 
+User = get_user_model()
 
 class Room(models.Model):
     name = models.CharField(max_length=128)
