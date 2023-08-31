@@ -5,7 +5,9 @@ from django.utils import timezone
 import uuid
 from django.contrib.auth.models import User
 import shortuuid
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 
 class Project(models.Model):
