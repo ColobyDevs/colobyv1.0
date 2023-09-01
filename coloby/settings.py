@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 import os
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,6 +24,12 @@ INSTALLED_APPS = [
     "accounts",
     "cowork",
     # "commands",
+    'rest_framework',
+    'rest_framework.authtoken',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 
 ]
 
@@ -49,6 +56,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # `allauth` needs this from django
+                'django.template.context_processors.request',
             ],
         },
     },
@@ -107,14 +116,44 @@ CHANNEL_LAYERS = {
     }
 }
 
-<<<<<<< HEAD
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by email
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+AUTHENTICATION_CLASSES = (
+    'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+}
+
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "accounts.CustomUser"
-=======
-AUTH_USER_MODEL = "accounts.User"
-LOGIN_REDIRECT_URL = "index"
-LOGIN_URL = "login"
->>>>>>> cowork
+
+
+JWT_AUTH = {
+    'JWT_SECRET_KEY': 'whateverlol',
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_ALLOW_REFRESH': True,    
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
+}
+
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_LOGOUT_ON_GET = True
