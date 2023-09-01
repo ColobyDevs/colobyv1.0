@@ -4,16 +4,16 @@ from django.db import models
 from django.utils import timezone
 import uuid
 from django.contrib.auth.models import User
-import shortuuid
+# import shortuuid
 from django.contrib.auth import get_user_model
-from accounts.models import User
+from accounts.models import CustomUser
 
 User = get_user_model()
 
 class Room(models.Model):
     name = models.CharField(max_length=128)
     slug = models.SlugField(unique=True)
-    users = models.ManyToManyField(User)
+    users = models.ManyToManyField(CustomUser)
     is_private = models.BooleanField(default=True)
 
     def __str__(self):
@@ -22,7 +22,7 @@ class Room(models.Model):
 
 class Message(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     message = models.TextField()
     media = models.FileField(upload_to='media', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -38,7 +38,7 @@ class Task(models.Model):
     description = models.TextField()
     completed = models.BooleanField(default=False)
     due_date = models.DateTimeField()
-    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE)
+    assigned_to = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -47,7 +47,7 @@ class Task(models.Model):
 
 class Comment(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -62,7 +62,7 @@ class UploadedFile(models.Model):
     file = models.FileField(upload_to='uploads/')
     room = models.ForeignKey(Room, on_delete=models.CASCADE)  # Add this foreign key to Room
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
 
     def __str__(self):
@@ -71,7 +71,7 @@ class UploadedFile(models.Model):
 
 class FileAccessLog(models.Model):
     file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
-    accessed_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    accessed_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     accessed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
