@@ -1,3 +1,7 @@
+from rest_framework import generics, permissions
+from serializers.serializers import TaskSerializer, CommentSerializer
+from .models import Task, Comment
+from django.shortcuts import get_object_or_404
 from .models import UploadedFile, FileAccessLog
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -17,7 +21,7 @@ def index(request, slug):
     messages = Message.objects.filter(room=room).order_by('created_at')
     # public_projects = Room.objects.filter(is_private=False)
     tasks = Task.objects.filter(room=room)
-    
+
     return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks})
 
 
@@ -28,19 +32,21 @@ def public_chat(request, slug):
     public_projects = Room.objects.filter(is_private=False)
     messages = Message.objects.filter(room=room).order_by('created_at')
     tasks = Task.objects.filter(room=room)
-    return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks, 'public_projects':public_projects})
+    return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks, 'public_projects': public_projects})
 
 
 @login_required
 def room_create(request):
     if request.method == "POST":
         room_name = request.POST["room_name"]
-        is_private = request.POST.get("is_private") == "on"  # Check if the room should be private
+        # Check if the room should be private
+        is_private = request.POST.get("is_private") == "on"
 
         uid = str(''.join(random.choices(
             string.ascii_letters + string.digits, k=4)))
         room_slug = slugify(room_name + "_" + uid)
-        room = Room.objects.create(name=room_name, slug=room_slug, is_private=is_private)
+        room = Room.objects.create(
+            name=room_name, slug=room_slug, is_private=is_private)
 
         if is_private:
             return redirect(reverse('chat', kwargs={'slug': room.slug}))
@@ -48,7 +54,6 @@ def room_create(request):
             return redirect(reverse('chat', kwargs={'slug': room.slug}))
 
     return render(request, 'chat/create.html')
-
 
 
 @login_required
@@ -61,67 +66,32 @@ def room_join(request):
         return render(request, 'chat/join.html')
 
 
-@login_required
-def create_task(request, slug):
-    room = get_object_or_404(Room, slug=slug)
+class TaskListCreateView(generics.ListCreateAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    if request.method == 'POST':
-        form = TaskForm(request.POST)
-        if form.is_valid():
-            task = form.save(commit=False)
-            task.room = room
-            task.save()
-            return redirect('/')
-    else:
-        form = TaskForm()
-
-    return render(request, 'chat/create_task.html', {'form': form, 'room': room})
+    def perform_create(self, serializer):
+        room = get_object_or_404(Room, slug=self.kwargs['slug'])
+        serializer.save(room=room)
 
 
-
-@login_required
-def update_task(request, slug, task_id):
-    room = get_object_or_404(Room, slug=slug)
-    task = get_object_or_404(Task, pk=task_id)
-
-    if request.method == 'POST':
-        form = TaskForm(request.POST, instance=task)
-        if form.is_valid():
-            form.save()
-            return redirect(reverse('index', kwargs={'slug': room.slug}))
-    else:
-        form = TaskForm(instance=task)
-
-    return render(request, 'chat/update_task.html', {'form': form, 'room': room, 'task': task})
+class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
+class CommentCreateView(generics.CreateAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-@login_required
-def comment_form(request, slug, task_id):
-    room = get_object_or_404(Room, slug=slug)
-    task = get_object_or_404(Task, pk=task_id)
 
-    if request.method == 'POST':
-        form = CommentForm(request.POST, instance=task)
-        if form.is_valid():
-            form.save()
-            return redirect('/')
-    else:
-        form = CommentForm(instance=task)
-        
-    return render(request, 'chat/comment.html', {'form':form, 'room': room, 'task': task})
-
-    
-@login_required
-def delete_task(request, slug, task_id):
-    room = get_object_or_404(Room, slug=slug)
-    task = get_object_or_404(Task, pk=task_id)
-
-    if request.method == 'POST':
-        task.delete()
-        return redirect(reverse('index', kwargs={'slug': room.slug}))
-
-    return render(request, 'chat/delete_task.html', {'room': room, 'task': task})
+class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 @login_required
