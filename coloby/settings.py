@@ -41,6 +41,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        # Add the account middleware:
+    # "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "coloby.urls"
@@ -120,14 +122,11 @@ CHANNEL_LAYERS = {
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
     'django.contrib.auth.backends.ModelBackend',
-
+ 'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     # `allauth` specific authentication methods, such as login by email
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
-AUTHENTICATION_CLASSES = (
-    'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-    'allauth.account.auth_backends.AuthenticationBackend',
-)
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
