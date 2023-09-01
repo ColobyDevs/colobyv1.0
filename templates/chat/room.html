@@ -70,7 +70,6 @@
         'ws://' + window.location.host + '/chat/{{ slug }}/'
     );
 
-    const notificationSound = new Audio('{% static 'notify.wav' %}');
 
     chatSocket.onmessage = function(e) {
         const data = JSON.parse(e.data);
@@ -82,9 +81,7 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
         // Play notification sound
-        if (document.visibilityState !== 'visible') {
-            playNotificationSound();
-        }
+        
     };
 
     chatSocket.onclose = function(e) {
@@ -103,38 +100,14 @@
         }
     });
 
-    function playNotificationSound() {
-        // Play the notification sound
-        notificationSound.play();
-    }
+  
 
     // Refresh the chat periodically
     const refreshInterval = 5000; // 5 seconds
     setInterval(refreshChat, refreshInterval);
 
 
-//timeout for inactivity
 
-        let inactivityTimeout;
-    
-        function resetInactivityTimeout() {
-            clearTimeout(inactivityTimeout);
-            inactivityTimeout = setTimeout(redirectToHomePage, 300000); // 5 minutes (300000 milliseconds)
-        }
-    
-        function redirectToHomePage() {
-            window.location.href = '/'; // Change this to your home page URL
-        }
-    
-        // Reset the inactivity timeout whenever there's user activity
-        document.addEventListener('mousemove', resetInactivityTimeout);
-        document.addEventListener('keydown', resetInactivityTimeout);
-        document.addEventListener('click', resetInactivityTimeout);
-        
-        // Initialize the inactivity timeout when the page loads
-        resetInactivityTimeout();
-
-    
 
 </script>
 
