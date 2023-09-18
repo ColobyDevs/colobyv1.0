@@ -1,5 +1,8 @@
-from rest_framework import generics, permissions
-from serializers.serializers import TaskSerializer, CommentSerializer
+from rest_framework import generics, permissions, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from serializers.serializers import TaskSerializer, CommentSerializer, SendMessageSerializer, ReceiveMessageSerializer
 from .models import Task, Comment
 from .models import UploadedFile, FileAccessLog
 from django.contrib.auth.decorators import login_required
@@ -7,8 +10,7 @@ from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.utils.text import slugify
 import string
 import random
-from cowork.models import Room
-from .models import Task, Message
+from cowork.models import Room, Task, Message
 from .forms import TaskForm, CommentForm
 
 
@@ -62,8 +64,39 @@ def room_join(request):
         return redirect(reverse('chat', kwargs={'slug': room.slug}))
     else:
         return render(request, 'chat/join.html')
+    
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def send_message(request, room_slug):
+    if request.method == "POST":
+        serializer = SendMessageSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            message_text = request.POST.get("message_text")
 
+            room = Room.objects.get(slug=room_slug)
+            message = Message.objects.create(room=room, user=user, message=message_text)
 
+            return Response({"status": "Message successfully sent!"}, status=status.HTTP_201_CREATED)
+        
+        return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+    return Response({"error": "Invalid request method."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_message(request, room_slug):
+    if request.method == "GET":
+        room = Room.objects.get(slug=room_slug)
+        messages = Message.objects.filter(room=room).order_by("created_at")
+
+        # serializing each message to JSON
+        serialized_messages = ReceiveMessageSerializer(messages, many=True).data
+
+        return Response({"messages": serialized_messages}, status=status.HTTP_200_OK)
+    
+    return Response({"error": "Invalid request method."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
 class TaskListCreateView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer

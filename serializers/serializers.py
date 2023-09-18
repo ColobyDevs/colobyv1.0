@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from allauth.account.models import EmailAddress
 from accounts.models import CustomUser
-from cowork.models import Task, Comment
+from cowork.models import Task, Comment, Message
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 
@@ -54,7 +54,24 @@ class SignInSerializer(serializers.Serializer):
         refresh = RefreshToken.for_user(user)
         return {"Info": f"Welcome {username}", "access_token": str(refresh.access_token)}
 
+class SendMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = "__all__"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['room'].required = True
+        self.fields['user'].required = True
+        self.fields['message'].required = True
+
+class ReceiveMessageSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.username")
+
+    class Meta:
+        model = Message
+        fields = ["user", "message", "created_at"]
 
 
 class TaskSerializer(serializers.ModelSerializer):
