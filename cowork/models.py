@@ -59,7 +59,7 @@ class Room(BaseModel):
     name = models.CharField(max_length=128)
     slug = models.SlugField(unique=True)
     users = models.ManyToManyField(CustomUser)
-    is_private = models.BooleanField(default=True)
+    is_private = models.BooleanField(default=False)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="created_rooms", null=True, blank=True)
     
     def __str__(self):
