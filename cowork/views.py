@@ -11,6 +11,7 @@ from django.utils.text import slugify
 import string
 import random
 from cowork.models import Room, Task, Message
+from django.http import HttpResponse, Http404
 from .forms import TaskForm, CommentForm
 
 
@@ -38,7 +39,7 @@ def public_chat(request, slug):
 @login_required
 def room_create(request):
     if request.method == "POST":
-        room_name = request.POST["room_name"]
+        room_name = request.POST.get("room_name")
         # Check if the room should be private
         is_private = request.POST.get("is_private") == "on"
 
@@ -59,11 +60,18 @@ def room_create(request):
 @login_required
 def room_join(request):
     if request.method == "POST":
-        room_name = request.POST["room_name"]
-        room = Room.objects.get(slug=room_name)
-        return redirect(reverse('chat', kwargs={'slug': room.slug}))
-    else:
-        return render(request, 'chat/join.html')
+        room_name = request.POST.get("room_name")
+        try:
+            room = Room.objects.get(slug=room_name)
+        except Room.DoesNotExist:
+            raise Http404("Room does not exist!")
+        
+        if not room.is_private or request.user in room.users.all():
+            return redirect(reverse('chat', kwargs={'slug': room.slug}))
+        else:
+            return HttpResponse("Access Denied, this is a private room!")
+            
+    return HttpResponse("Unable to join the room.")
     
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

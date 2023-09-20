@@ -4,6 +4,11 @@
     <form method='post' action='{% url 'room-join' %}'>
         {% csrf_token %}
         <input name='room_name' id='room_name' required="true" placeholder='Room Code'>
+        <label for="room_type">Room Type:</label>
+        <select id="room_type" name="room_type">
+            <option value="Public">Public</option>
+            <option value="Public">Private</option>
+        </select>
         <input type='submit' id="submit">
     </form>
 {% endblock %}
