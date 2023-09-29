@@ -2,17 +2,22 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from serializers.serializers import TaskSerializer, CommentSerializer, SendMessageSerializer, ReceiveMessageSerializer
-from .models import Task, Comment
-from .models import UploadedFile, FileAccessLog
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.renderers import JSONRenderer
+from rest_framework.views import APIView
+from serializers.serializers import TaskSerializer, CommentSerializer, SendMessageSerializer, ReceiveMessageSerializer, UploadedFileSerializer
+from .models import Task, Comment, Room, Message, UploadedFile, FileAccessLog
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.utils.text import slugify
+from django.utils.decorators import method_decorator
+from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.urls import reverse
+from .forms import TaskForm, CommentForm
 import string
 import random
-from cowork.models import Room, Task, Message
-from django.http import HttpResponse, Http404
-from .forms import TaskForm, CommentForm
+import mimetypes
 
 
 # private room
@@ -26,66 +31,123 @@ def index(request, slug):
     return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks})
 
 
-# public room
 @login_required
 def public_chat(request, slug):
-    room = get_object_or_404(Room, slug=slug, is_private=False)
-    public_projects = Room.objects.filter(is_private=False)
-    messages = Message.objects.filter(room=room).order_by('created_at')
-    tasks = Task.objects.filter(room=room)
-    return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks, 'public_projects': public_projects})
+    """
+    Displays a public chat room.
+
+    Args:
+        request: The HTTP request.
+        slug: The slug of the chat room.
+
+    Returns:
+        A rendered HTML response.
+    """
+
+    try:
+        room = get_object_or_404(Room, slug=slug, is_private=False)
+        public_projects = Room.objects.filter(is_private=False)
+        messages = Message.objects.filter(room=room).order_by('created_at')
+        tasks = Task.objects.filter(room=room)
+        return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks, 'public_projects': public_projects})
+    except Room.DoesNotExist:
+        return HttpResponse("Room not found!", status=404)
+    except Exception as e:
+        print(f"An error occurred {str(e)}")
+        return HttpResponse("An error occured", status=500)
 
 
 @login_required
 def room_create(request):
+    """
+    Creates a new chat room.
+
+    Args:
+        request: The HTTP request.
+
+    Returns:
+        A rendered HTML response, or a redirect to the new chat room.
+    """
     if request.method == "POST":
-        room_name = request.POST.get("room_name")
-        # Check if the room should be private
-        is_private = request.POST.get("is_private") == "on"
+        try:
+                room_name = request.POST.get("room_name")
+                # Check if the room should be private
+                is_private = request.POST.get("is_private") == "on"
 
-        uid = str(''.join(random.choices(
-            string.ascii_letters + string.digits, k=4)))
-        room_slug = slugify(room_name + "_" + uid)
-        room = Room.objects.create(
-            name=room_name, slug=room_slug, is_private=is_private)
+                uid = str(''.join(random.choices(
+                    string.ascii_letters + string.digits, k=4)))
+                room_slug = slugify(room_name + "_" + uid)
+                room = Room.objects.create(
+                    name=room_name, slug=room_slug, is_private=is_private)
 
-        if is_private:
-            return redirect(reverse('chat', kwargs={'slug': room.slug}))
-        else:
-            return redirect(reverse('chat', kwargs={'slug': room.slug}))
+                if is_private:
+                    return redirect(reverse('chat', kwargs={'slug': room.slug}))
+                else:
+                    return redirect(reverse('chat', kwargs={'slug': room.slug}))
 
+        except Exception as e:
+            messages.error(request, "An error occurred during room creation")
+            return HttpResponse(status=500)
+        
     return render(request, 'chat/create.html')
+
 
 
 @login_required
 def room_join(request):
+    """
+    Joins a chat room.
+
+    Args:
+        request: The HTTP request.
+
+    Returns:
+        A redirect to the chat room, or raises an error if the room does not exist or the 
+        user does not have permission to join it.
+    """
     if request.method == "POST":
         room_name = request.POST.get("room_name")
         try:
             room = Room.objects.get(slug=room_name)
         except Room.DoesNotExist:
-            raise Http404("Room does not exist!")
+            messages.error(request, "Room does not exist!")
+            return HttpResponse(status=500)
         
         if not room.is_private or request.user in room.users.all():
             return redirect(reverse('chat', kwargs={'slug': room.slug}))
         else:
-            return HttpResponse("Access Denied, this is a private room!")
+            messages.error(request, "Access denied, this is a private room!")
+            return HttpResponseForbidden("Access denied, this is a private room!")
             
-    return HttpResponse("Unable to join the room.")
+    return HttpResponseBadRequest("Unable to join the room.")
     
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def send_message(request, room_slug):
+    """Sends a message to a chat room.
+
+    Args:
+        request: The HTTP request.
+        room_slug: The slug of the chat room.
+
+    Returns:
+        A JSON response with the status of the message send, or an error response if the request is invalid.
+    """
     if request.method == "POST":
         serializer = SendMessageSerializer(data=request.data)
         if serializer.is_valid():
             user = request.user
             message_text = request.POST.get("message_text")
 
-            room = Room.objects.get(slug=room_slug)
-            message = Message.objects.create(room=room, user=user, message=message_text)
-
-            return Response({"status": "Message successfully sent!"}, status=status.HTTP_201_CREATED)
+            try:
+                room = Room.objects.get(slug=room_slug)
+                message = Message.objects.create(room=room, user=user, message=message_text)
+                return Response({"status": "Message successfully sent!"}, status=status.HTTP_201_CREATED)
+            except Room.DoesNotExist:
+                raise Http404("Room does not exist!")
+            except Exception as e:
+                messages.error(f"Error occurred: {str(e)}")
+                return HttpResponse(status=500)
         
         return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -94,14 +156,28 @@ def send_message(request, room_slug):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_message(request, room_slug):
+    """Gets all messages from a chat room.
+
+    Args:
+        request: The HTTP request.
+        room_slug: The slug of the chat room.
+
+    Returns:
+        A JSON response with a list of messages, or an error response if the request is invalid.
+    """
     if request.method == "GET":
-        room = Room.objects.get(slug=room_slug)
-        messages = Message.objects.filter(room=room).order_by("created_at")
+        try:
+            room = Room.objects.get(slug=room_slug)
+            messages = Message.objects.filter(room=room).order_by("created_at")
 
-        # serializing each message to JSON
-        serialized_messages = ReceiveMessageSerializer(messages, many=True).data
+            serialized_messages = ReceiveMessageSerializer(messages, many=True).data
 
-        return Response({"messages": serialized_messages}, status=status.HTTP_200_OK)
+            return Response({"messages": serialized_messages}, status=status.HTTP_200_OK)
+        except Room.DoesNotExist:
+            raise Http404("Room does not exist!")
+        except Exception as e:
+            messages.error(f"Error occurred: {str(e)}")
+            return HttpResponse(status=500)
     
     return Response({"error": "Invalid request method."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
@@ -133,30 +209,126 @@ class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-@login_required
+class IsUploaderOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission class to only allow the uploader of the file to  make changes to said file.
+    """
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        
+        return obj.uploaded_by == request.user
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def upload_file(request, room_slug):
-    if request.method == 'POST' and request.FILES.get('file'):
-        uploaded_file = request.FILES['file']
-        description = request.POST.get('description', '')
-        room = get_object_or_404(Room, slug=room_slug)
-        uploaded_file_instance = UploadedFile.objects.create(
-            file=uploaded_file,
-            room=room,
-            uploaded_by=request.user,
-            description=description
-        )
-        # You can optionally add a success message here
-        return redirect('file_list', room_slug=room_slug)
+    """
+    Uploads a file to a chat room.
 
-    return render(request, 'file_manager/upload_file.html')
+    Args:
+        request: The HTTP request.
+        room_slug: The slug of the chat room.
+
+    Returns:
+        A JSON response with the status of the file upload, or an error response if the request is invalid.
+    """
+    if request.method == 'POST' and request.FILES.get('file'):
+        try:
+            uploaded_file = request.FILES['file']
+            description = request.POST.get('description', '')
+            room = get_object_or_404(Room, slug=room_slug)
+            uploaded_file_instance = UploadedFile.objects.create(
+                file=uploaded_file,
+                room=room,
+                uploaded_by=request.user,
+                description=description
+            )
+
+            # return redirect('file_list', room_slug=room_slug)
+            return Response({"status": "File uploaded successfully."}, status=status.HTTP_200_OK)
+        
+        except Room.DoesNotExist:
+            raise Http404("Room does not exist!")
+        except Exception as e:
+            messages.error(f"Error occurred: {str(e)}")
+            return HttpResponse(status=500)
+
+    # return render(request, 'file_manager/upload_file.html')
+    return Response({"error": "Invalid request method!"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+class UploadFileView(generics.CreateAPIView):
+    queryset = UploadedFile.objects.all()
+    serializer_class = UploadedFileSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [permissions.IsAuthenticated, IsUploaderOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)
+
+
+@method_decorator(login_required, name="dispatch")
+class FileListAPIView(APIView):
+    """
+    Lists all files in a chat room.
+
+    Args:
+        request: The HTTP request.
+        room_slug: The slug of the chat room.
+
+    Returns:
+        A JSON response with a list of files in the chat room, or an error response if the request is invalid.
+    """
+    renderer_classes = [JSONRenderer]
+
+    def get(self, request, room_slug):
+        try:
+            room = get_object_or_404(Room, slug=room_slug)
+            uploaded_files = UploadedFile.objects.filter(room=room)
+            serializer = UploadedFileSerializer(uploaded_files, many=True)
+            # return render(request, 'file_manager/file_list.html', {'room': room, 'uploaded_files': uploaded_files})
+            return Response({"status": "You are viewing files now", "files": serializer.data}, status=status.HTTP_200_OK)
+        except Room.DoesNotExist:
+            raise Http404("Room does not exist!")
+        except Exception as e:
+            messages.error(f"Error occurred {str(e)}")
+            return HttpResponse(status=500)
 
 
 @login_required
-def file_list(request, room_slug):
-    room = get_object_or_404(Room, slug=room_slug)
-    uploaded_files = UploadedFile.objects.filter(room=room)
-    return render(request, 'file_manager/file_list.html', {'room': room, 'uploaded_files': uploaded_files})
+def file_download(request, room_slug, file_id):
+    """
+    Downloads a file from a chat room.
 
+    Args:
+        request: The HTTP request.
+        room_slug: The slug of the chat room.
+        file_id: The ID of the file to download.
+
+    Returns:
+        A FileResponse object with the file content, or an error response if the request is invalid.
+    """
+    try:
+        room = get_object_or_404(Room, slug=room_slug)
+        upload_file = get_object_or_404(UploadedFile, id=file_id, room=room)
+        file_path = upload_file.file.path
+        content_type, _ = mimetypes.guess_type(file_path)
+
+        if upload_file.uploaded_by == request.user or request.user in room.users.all():
+            response = FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
+            response['Content-Type'] = content_type
+            response['Content-Disposition'] = f'attachment; filename="{upload_file.file.name}"'
+            return response
+        else:
+            return HttpResponse("Access Denied!", status=403)
+    
+    except Room.DoesNotExist:
+        raise Http404("Room does not exist!")
+    except UploadedFile.DoesNotExist:
+        raise Http404("File does not exist!")
+    except Exception as e:
+        messages.error(f"Error occurred {str(e)}")
+        return HttpResponse(status=500)
 
 @login_required
 def file_access_log(request, file_id):

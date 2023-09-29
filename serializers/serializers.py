@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from allauth.account.models import EmailAddress
 from accounts.models import CustomUser
-from cowork.models import Task, Comment, Message
+from cowork.models import Task, Comment, Message, UploadedFile
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 
@@ -84,3 +84,11 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
+
+
+class UploadedFileSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source="uploaded_by.username")
+    access_permissions = serializers.StringRelatedField(many=True)
+    class Meta:
+        model = UploadedFile
+        fields = ["file", "description", "owner", "access_permissions", "file_size"]

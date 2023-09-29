@@ -108,6 +108,13 @@ class UploadedFile(BaseModel):
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
+    access_permissions = models.ManyToManyField(CustomUser, related_name="accessible_files", blank=True)
+    file_size = models.PositiveIntegerField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.file_size and self.file:
+            self.file_size = self.file.size
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.file.name

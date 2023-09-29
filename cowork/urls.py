@@ -16,7 +16,8 @@ urlpatterns = [
     path('room/comments/<int:pk>/', views.CommentRetrieveUpdateDestroyView.as_view(), name='comment-detail'),
 
     path('chat/upload/<str:room_slug>/', views.upload_file, name='upload_file'),
-    path('chat/list/<str:room_slug>/', views.file_list, name='file_list'),
+    path('chat/list/<str:room_slug>/', views.FileListAPIView.as_view(), name='file_list'),
+    path('chat/download/<str:room_slug>/<int:file_id>/', views.file_download, name='file_download'),
     path('chat/access-log/<int:file_id>/', views.file_access_log, name='file_access_log'),
     path('api/chat/send/<slug:room_slug>/', views.send_message, name='send_message'), 
     path('api/chat/get/<slug:room_slug>/', views.get_message, name='get_message'), 
