@@ -1,0 +1,5 @@
+{
+    "api_key": "your_openai_api_key_here",
+    "instructions": "Generate a description for the file located at:",
+    "commit_interval": 60
+}
