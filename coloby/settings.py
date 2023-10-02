@@ -26,12 +26,13 @@ INSTALLED_APPS = [
     "accounts",
     "cowork",
     # "commands",
-    'rest_framework',
-    'rest_framework.authtoken',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
+    "rest_framework",
+    "rest_framework.authtoken",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "tinymce"
 
 ]
 
@@ -149,6 +150,17 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_AFTER_LIFETIME": timedelta(days=1),
     "SLIDING_TOKEN_LIFETIME_GRACE_PERIOD": timedelta(days=1),
     "SLIDING_TOKEN_SAVE_BODY": True,
+}
+
+TINYMCE_DEFAULT_CONFIG = {
+    'height': 360,
+    'width': 800,
+    'menubar': False,
+    'theme': 'silver',  # it's set to 'advanced' by default
+    'plugins': 'advlist autolink lists link image charmap print preview anchor filemanager fullscreen media spellchecker',
+    'toolbar': 'undo redo | formatselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
+    'custom_undo_redo_levels': 3,
+    'content_css': ['static/css'],
 }
 
 
