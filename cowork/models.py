@@ -8,9 +8,8 @@ from django.contrib.auth.models import User
 # import shortuuid
 from django.contrib.auth import get_user_model
 from accounts.models import CustomUser
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 import datetime
+from tinymce.models import HTMLField
 
 
 User = get_user_model()
@@ -104,6 +103,7 @@ class Comment(BaseModel):
 class UploadedFile(BaseModel):
     file = models.FileField(upload_to='uploads/')
     object_id = models.PositiveIntegerField(null=True, blank=True, default=None)
+    content = HTMLField(default="<p>You put something here...</p>")
     room = models.ForeignKey(Room, on_delete=models.CASCADE)  # Add this foreign key to Room
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

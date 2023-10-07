@@ -9,12 +9,13 @@ from serializers.serializers import TaskSerializer, CommentSerializer, SendMessa
 from .models import Task, Comment, Room, Message, UploadedFile, FileAccessLog
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.urls import reverse
-from .forms import TaskForm, CommentForm
+from .forms import TaskForm, CommentForm, UploadedFileForm
 import string
 import random
 import mimetypes
@@ -291,7 +292,7 @@ class FileListAPIView(APIView):
         except Room.DoesNotExist:
             raise Http404("Room does not exist!")
         except Exception as e:
-            messages.error(f"Error occurred {str(e)}")
+            messages.error(f"Error occurred: {str(e)}")
             return HttpResponse(status=500)
 
 
@@ -327,8 +328,46 @@ def file_download(request, room_slug, file_id):
     except UploadedFile.DoesNotExist:
         raise Http404("File does not exist!")
     except Exception as e:
-        messages.error(f"Error occurred {str(e)}")
+        messages.error(f"Error occurred: {str(e)}")
         return HttpResponse(status=500)
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def edit_uploaded_file(request, file_id):
+    """
+    Edit an uploaded file.
+
+    Args:
+        request: The HTTP request.
+        file_id: The ID of the uploaded file to edit.
+
+    Returns:
+        A redirect response to the file detail page IF the form is valid or
+        a render response to the edit uploaded file for invalid form.
+
+    """
+    try:
+        upload_file = get_object_or_404(UploadedFile, id=file_id)
+
+        # if request.user != upload_file.owner:
+        #     raise PermissionDenied()
+
+        if request.method == 'POST':
+            form = UploadedFileForm(request.POST, instance=upload_file)
+            if form.is_valid():
+                form.save()
+                # return redirect("file_detail", file_id=file_id)
+                return Response({"status": "File edited successfully"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Form data is invalid"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            form = UploadedFileForm(instance=upload_file)
+            # return render(request, "file_manager/edit_uploaded_file.html", {"form": form, "upload_file": upload_file})
+            return Response({"status": "You are editing this file now"}, status=status.HTTP_200_OK)
+    except Exception as e:
+        # messages.error(f"Error occurred: {str(e)}")
+        # return HttpResponse(status=500)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @login_required
 def file_access_log(request, file_id):

@@ -4,6 +4,7 @@
         <li>
             <a href="{% url 'file_access_log' uploaded_file.id %}">{{ uploaded_file.file.name }}</a>
             - Uploaded by {{ uploaded_file.uploaded_by.username }} at {{ uploaded_file.uploaded_at }}
+            <a href="{% url 'edit_uploaded_file' uploaded_file.id %}">Edit</a>
         </li>
     {% endfor %}
 </ul>
