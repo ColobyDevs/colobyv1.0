@@ -1,19 +1,23 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
+
 from serializers.serializers import (
     TaskSerializer, CommentSerializer,
     SendMessageSerializer, ReceiveMessageSerializer, 
     UploadedFileSerializer, BranchSerializer)
 from .models import (Task, Comment, Room, Message, 
                      UploadedFile, FileAccessLog, Branch)
+
+from serializers.serializers import TaskSerializer, CommentSerializer, SendMessageSerializer, ReceiveMessageSerializer, UploadedFileSerializer, RoomSerializer
+from .models import Task, Comment, Room, Message, UploadedFile, FileAccessLog
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
@@ -61,6 +65,27 @@ def public_chat(request, slug):
         print(f"An error occurred {str(e)}")
         return HttpResponse("An error occured", status=500)
 
+class RoomViewSet(viewsets.ModelViewSet):
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+class RoomDetail(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, unique_link):
+        try:
+            room = Room.objects.get(unique_link=unique_link)
+            if room.is_private and request.user not in room.users.all():
+                return Response({"detail": "You do not have access to this room."}, status=status.HTTP_403_FORBIDDEN)
+            serializer = RoomSerializer(room)
+            return Response(serializer.data)
+        except Room.DoesNotExist:
+            return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
+
 
 @login_required
 def room_create(request):
@@ -83,16 +108,20 @@ def room_create(request):
                     string.ascii_letters + string.digits, k=4)))
                 room_slug = slugify(room_name + "_" + uid)
                 room = Room.objects.create(
-                    name=room_name, slug=room_slug, is_private=is_private)
+                    name=room_name, 
+                    slug=room_slug, 
+                    is_private=is_private,
+                    created_by=request.user)
 
                 if is_private:
-                    return redirect(reverse('chat', kwargs={'slug': room.slug}))
+                    return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
                 else:
-                    return redirect(reverse('chat', kwargs={'slug': room.slug}))
+                    return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
 
         except Exception as e:
             messages.error(request, "An error occurred during room creation")
-            return HttpResponse(status=500)
+            return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
+
         
     return render(request, 'chat/create.html')
 
@@ -117,6 +146,7 @@ def room_join(request):
         except Room.DoesNotExist:
             messages.error(request, "Room does not exist!")
             return HttpResponse(status=500)
+
         
         if not room.is_private or request.user in room.users.all():
             return redirect(reverse('chat', kwargs={'slug': room.slug}))
@@ -142,7 +172,7 @@ def send_message(request, room_slug):
         serializer = SendMessageSerializer(data=request.data)
         if serializer.is_valid():
             user = request.user
-            message_text = request.POST.get("message_text")
+            message_text = serializer.validated_data.get("message_text")
 
             try:
                 room = Room.objects.get(slug=room_slug)
