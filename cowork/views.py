@@ -5,8 +5,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
+
+from serializers.serializers import (
+    TaskSerializer, CommentSerializer,
+    SendMessageSerializer, ReceiveMessageSerializer, 
+    UploadedFileSerializer, BranchSerializer)
+from .models import (Task, Comment, Room, Message, 
+                     UploadedFile, FileAccessLog, Branch)
+
 from serializers.serializers import TaskSerializer, CommentSerializer, SendMessageSerializer, ReceiveMessageSerializer, UploadedFileSerializer, RoomSerializer
 from .models import Task, Comment, Room, Message, UploadedFile, FileAccessLog
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, reverse, redirect, get_object_or_404
@@ -14,7 +23,7 @@ from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.urls import reverse
-from .forms import TaskForm, CommentForm, UploadedFileForm
+from .forms import TaskForm, CommentForm, UploadedFileForm, BranchForm
 import string
 import random
 import mimetypes
@@ -293,6 +302,14 @@ class UploadFileView(generics.CreateAPIView):
         serializer.save(uploaded_by=self.request.user)
 
 
+class BranchList(generics.ListCreateAPIView):
+    queryset = Branch.objects.all()
+    serializer_class = BranchSerializer
+
+class BranchDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Branch.objects.all()
+    serializer_class = BranchSerializer
+    
 @method_decorator(login_required, name="dispatch")
 class FileListAPIView(APIView):
     """
