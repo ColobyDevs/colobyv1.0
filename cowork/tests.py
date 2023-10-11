@@ -3,13 +3,14 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from .models import Room, UploadedFile
-from .forms import UploadedFileForm
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.conf import settings
 import tempfile
 import shutil
+import secrets
+import string
 
 User = get_user_model()
 
@@ -144,6 +145,22 @@ class RoomAPITests(TestCase):
         response = self.client.post(url, data, follow=True)
 
         self.assertEqual(response.status_code, 200)
+
+    def test_generate_unique_link(self):
+        """Tests that a unique link is generated when creating a room."""
+        self.client.login(username='testuser', password='testpassword')
+        url = reverse('room-create')
+        data = {
+            'room_name': 'Unique-Link-Room',
+            'is_private': '',
+        }
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, 302)
+
+        created_room = Room.objects.get(name='Unique-Link-Room')
+
+        self.assertTrue(created_room.unique_link)
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="media"))
 class FileAPITests(TestCase):
