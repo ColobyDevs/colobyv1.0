@@ -17,6 +17,9 @@ urlpatterns = [
 
     path('chat/upload/<str:room_slug>/', views.upload_file, name='upload-file'),
     path('chat/list/<str:room_slug>/', views.FileListAPIView.as_view(), name='file-list'),
+    path('api/branches/', views.BranchList.as_view(), name='branch-list'),
+    path('api/branches/<int:pk>/', views.BranchDetail.as_view(), name='branch-detail'),
+    
     path('chat/download/<str:room_slug>/<int:file_id>/', views.file_download, name='file-download'),
     path('api/v1/chat/edit-uploaded-file/<int:file_id>', views.edit_uploaded_file, name='edit-uploaded-file'),
     path('chat/access-log/<int:file_id>/', views.file_access_log, name='file_access_log'),
