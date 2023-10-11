@@ -1,7 +1,11 @@
 from rest_framework import serializers
 from allauth.account.models import EmailAddress
 from accounts.models import CustomUser
+
 from cowork.models import Task, Comment, Message, UploadedFile, Branch
+
+from cowork.models import Task, Comment, Message, UploadedFile, Room
+
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 
@@ -53,6 +57,17 @@ class SignInSerializer(serializers.Serializer):
         username =  User.objects.get(email=user).username
         refresh = RefreshToken.for_user(user)
         return {"Info": f"Welcome {username}", "access_token": str(refresh.access_token)}
+    
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ("username", "email", "password")
+    
+class RoomSerializer(serializers.ModelSerializer):
+    users = CustomUserSerializer(many=True)
+    created_by = CustomUserSerializer()
+    class Meta:
+        model = Room
+        fields = "__all__"
 
 class SendMessageSerializer(serializers.ModelSerializer):
     class Meta:

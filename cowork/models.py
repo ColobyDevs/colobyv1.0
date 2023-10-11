@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from django.db import models
 from django.db.models.query import QuerySet
 
@@ -56,11 +57,19 @@ class BaseModel(models.Model):
 
 class Room(BaseModel):
     name = models.CharField(max_length=128)
+    unique_link = models.CharField(max_length=50, unique=True, default=uuid.uuid4().hex[:50])
     slug = models.SlugField(unique=True)
     users = models.ManyToManyField(CustomUser)
     is_private = models.BooleanField(default=False)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="created_rooms", null=True, blank=True)
     
+    def save(self, *args, **kwargs):
+        if not self.unique_link or Room.objects.filter(unique_link=self.unique_link).exists():
+            self.unique_link = uuid.uuid4().hex[:50]
+            while Room.objects.filter(unique_link=self.unique_link).exists():
+                self.unique_link = uuid.uuid4().hex[:50]
+        super(Room, self).save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
