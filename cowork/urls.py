@@ -5,7 +5,7 @@ from cowork import views
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="base.html"), name='index'),
-    path("chat/room/<str:slug>/", views.index, name='chat'),
+    path("chat/room/<str:unique_link>/", views.index, name='chat'),
     path("create/", views.room_create, name='room-create'),
     path("join/", views.room_join, name='room-join'),
     path('public-room/<slug:slug>/', views.public_chat, name='public-room'),
@@ -21,5 +21,7 @@ urlpatterns = [
     path('api/v1/chat/edit-uploaded-file/<int:file_id>', views.edit_uploaded_file, name='edit-uploaded-file'),
     path('chat/access-log/<int:file_id>/', views.file_access_log, name='file_access_log'),
     path('api/chat/send/<slug:room_slug>/', views.send_message, name='send-message'), 
-    path('api/chat/get/<slug:room_slug>/', views.get_message, name='get-message'), 
+    path('api/chat/get/<slug:room_slug>/', views.get_message, name='get-message'),
+    path('api/room/create/', views.RoomViewSet.as_view({'post': 'create'})),
+    path('api/room/<int:pk>/', views.RoomDetail.as_view(), name='room-detail') 
 ]
