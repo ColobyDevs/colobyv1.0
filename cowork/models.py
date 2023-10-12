@@ -134,7 +134,7 @@ class Branch(BaseModel):
     original_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
     created_by = models.ForeignKey(CustomUser, on_delete = models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    changes = HTMLField(default="<p>Your changes go here...</p>")
+    content = HTMLField(default="<p>Your changes go here...</p>")
     description = models.TextField(blank=True)
 
     def __str__(self):

@@ -29,6 +29,7 @@ import random
 import mimetypes
 
 
+
 # private room
 @login_required
 def index(request, slug):
@@ -309,7 +310,7 @@ class BranchList(generics.ListCreateAPIView):
 class BranchDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Branch.objects.all()
     serializer_class = BranchSerializer
-    
+
 @method_decorator(login_required, name="dispatch")
 class FileListAPIView(APIView):
     """

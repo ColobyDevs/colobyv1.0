@@ -28,10 +28,13 @@ INSTALLED_APPS = [
     # "commands",
     "rest_framework",
     "rest_framework.authtoken",
+    # Documentation with Swagger
+    'rest_framework_swagger',
+    'drf_yasg',
     "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
+    # "allauth.account",
+    # "allauth.socialaccount",
+    # "allauth.socialaccount.providers.google",
     "tinymce"
 
 ]
