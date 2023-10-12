@@ -9,8 +9,6 @@ from django.test import override_settings
 from django.conf import settings
 import tempfile
 import shutil
-import secrets
-import string
 
 User = get_user_model()
 
@@ -161,6 +159,8 @@ class RoomAPITests(TestCase):
         created_room = Room.objects.get(name='Unique-Link-Room')
 
         self.assertTrue(created_room.unique_link)
+
+
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="media"))
 class FileAPITests(TestCase):

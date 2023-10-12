@@ -6,6 +6,10 @@
     <h2>{{ name }}</h2>
     <p>Room Code: {{ slug }}</p>
     <p>Room Type: {% if is_private %}Private{% else %}Public{% endif %}</p>
+    <p>Unique Link: {{ room.unique_link }}</p>
+
+    <a href="mailto:?subject=You Got An Invite To Join {{ name }}&body=Click this link to join the room: {{ room.unique_link }}" class="btn" title="This link will take you to the room you got invited to">Click here to join the room</a>
+
 
     <h3>Tasks:</h3>
     <ul>
