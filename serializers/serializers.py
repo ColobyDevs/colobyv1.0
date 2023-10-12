@@ -57,9 +57,11 @@ class SignInSerializer(serializers.Serializer):
         username =  User.objects.get(email=user).username
         refresh = RefreshToken.for_user(user)
         return {"Info": f"Welcome {username}", "access_token": str(refresh.access_token)}
-    
+
+
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
+        model = CustomUser
         fields = ("username", "email", "password")
     
 class RoomSerializer(serializers.ModelSerializer):

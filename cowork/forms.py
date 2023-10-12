@@ -26,4 +26,4 @@ class UploadedFileForm(forms.ModelForm):
 class BranchForm(forms.ModelForm):
     class Meta:
         model = Branch
-        fields = ['original_file', 'changes', 'description']
+        fields = ['original_file', 'content', 'description']
