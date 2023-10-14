@@ -1,5 +1,5 @@
 from django import forms
-from .models import Task, Comment, Message, UploadedFile
+from .models import Task, Comment, Message, UploadedFile, Branch
 
 class TaskForm(forms.ModelForm):
     class Meta:
@@ -23,7 +23,7 @@ class UploadedFileForm(forms.ModelForm):
         }
 
 
-# class MessageForm(forms.ModelForm):
-#     class Meta:
-#         model = Message
-#         fields = ['message', 'media']
+class BranchForm(forms.ModelForm):
+    class Meta:
+        model = Branch
+        fields = ['original_file', 'content', 'description']

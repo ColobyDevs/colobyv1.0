@@ -2,6 +2,8 @@ import datetime
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,11 +30,19 @@ INSTALLED_APPS = [
     # "commands",
     "rest_framework",
     "rest_framework.authtoken",
+    # Documentation with Swagger
+    'rest_framework_swagger',
+    'drf_yasg',
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
-    "tinymce"
+    "tinymce",
+ 
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
+    
+    "debug_toolbar"
 
 ]
 
@@ -44,6 +54,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     # Add the account middleware:
     # "allauth.account.middleware.AccountMiddleware",
 ]
@@ -127,20 +138,19 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     # 'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     # `allauth` specific authentication methods, such as login by email
-    'allauth.account.auth_backends.AuthenticationBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',    
 ]
-
-
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
 }
 
+
 # SIMPLEJWT SETTINGS
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
@@ -150,6 +160,8 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_AFTER_LIFETIME": timedelta(days=1),
     "SLIDING_TOKEN_LIFETIME_GRACE_PERIOD": timedelta(days=1),
     "SLIDING_TOKEN_SAVE_BODY": True,
+
+    "AUTH_HEADER_TYPES": ("Bearer", "Token"),
 }
 
 TINYMCE_DEFAULT_CONFIG = {
@@ -184,3 +196,32 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_LOGOUT_ON_GET = True
+
+
+# SOCIAL_LOGIN_SETTINGS
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": os.getenv('CLIENT_ID'),  
+            "secret": os.getenv('CLIENT_SECRET'),                                     
+        },
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "VERIFIED_EMAIL": True,
+    },
+}
+
+
+
+# DEBUG_TOOLBAR_SETTINGS
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+]
+

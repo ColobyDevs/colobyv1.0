@@ -5,8 +5,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
+
+from serializers.serializers import (
+    TaskSerializer, CommentSerializer,
+    SendMessageSerializer, ReceiveMessageSerializer, 
+    UploadedFileSerializer, BranchSerializer)
+from .models import (Task, Comment, Room, Message, 
+                     UploadedFile, FileAccessLog, Branch)
+
 from serializers.serializers import TaskSerializer, CommentSerializer, SendMessageSerializer, ReceiveMessageSerializer, UploadedFileSerializer, RoomSerializer
 from .models import Task, Comment, Room, Message, UploadedFile, FileAccessLog
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, reverse, redirect, get_object_or_404
@@ -14,10 +23,11 @@ from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.urls import reverse
-from .forms import TaskForm, CommentForm, UploadedFileForm
+from .forms import TaskForm, CommentForm, UploadedFileForm, BranchForm
 import string
 import random
 import mimetypes
+
 
 
 # private room
@@ -90,10 +100,12 @@ def room_create(request):
         A rendered HTML response, or a redirect to the new chat room.
     """
     if request.method == "POST":
-        try:
-                room_name = request.POST.get("room_name")
-                # Check if the room should be private
-                is_private = request.POST.get("is_private") == "on"
+            room_name = request.POST.get("room_name")
+            is_private = request.POST.get("is_private") == "on"
+            if not room_name:
+                messages.error(request, "Room name is required!")
+                return redirect(reverse('create-room'))
+            try:
 
                 uid = str(''.join(random.choices(
                     string.ascii_letters + string.digits, k=4)))
@@ -109,9 +121,9 @@ def room_create(request):
                 else:
                     return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
 
-        except Exception as e:
-            messages.error(request, "An error occurred during room creation")
-            return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
+            except Exception as e:
+                messages.error(request, "An error occurred during room creation")
+                return redirect(reverse('create-room'))
 
         
     return render(request, 'chat/create.html')
@@ -292,6 +304,14 @@ class UploadFileView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
 
+
+class BranchList(generics.ListCreateAPIView):
+    queryset = Branch.objects.all()
+    serializer_class = BranchSerializer
+
+class BranchDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Branch.objects.all()
+    serializer_class = BranchSerializer
 
 @method_decorator(login_required, name="dispatch")
 class FileListAPIView(APIView):
