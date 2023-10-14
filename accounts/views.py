@@ -3,6 +3,14 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from serializers.serializers import UserRegistrationSerializer, SignInSerializer
+from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -16,7 +24,6 @@ def register_user(request):
 
 
 
-
 class SignInAPIView(generics.GenericAPIView):
     serializer_class = SignInSerializer
     permission_classes = (permissions.AllowAny,)
@@ -26,3 +33,30 @@ class SignInAPIView(generics.GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             return Response(serializer.data)
 
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    callback_url = "http://localhost:3000"
+    client_class = OAuth2Client
+
+
+class LogoutView(APIView):
+    """
+        This endpoint is for logging out a user 
+    """
+    def post(self, request):
+
+        # NOTE: This only logs out a user that logs in using OAUTH for now
+        user_token = request.data["token"]
+        token = Token.objects.filter(key=user_token).first()
+        if token:
+            token.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({
+                "error":"invalid token"
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+    

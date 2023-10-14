@@ -23,3 +23,4 @@ management/
 build/
 
 colup.egg-info/
+.env
