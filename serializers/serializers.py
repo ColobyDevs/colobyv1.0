@@ -1,7 +1,11 @@
 from rest_framework import serializers
 from allauth.account.models import EmailAddress
 from accounts.models import CustomUser
+
+from cowork.models import Task, Comment, Message, UploadedFile, Branch
+
 from cowork.models import Task, Comment, Message, UploadedFile, Room
+
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 
@@ -32,7 +36,7 @@ class SignInSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
     def validate(self, attrs: dict):
         """
-        This is for validating credentiials for signing in
+        This is for validating credentials for signing in
         """
         error_messages = {
              "error-mssg-1": {
@@ -53,9 +57,11 @@ class SignInSerializer(serializers.Serializer):
         username =  User.objects.get(email=user).username
         refresh = RefreshToken.for_user(user)
         return {"Info": f"Welcome {username}", "access_token": str(refresh.access_token)}
-    
+
+
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
+        model = CustomUser
         fields = ("username", "email", "password")
     
 class RoomSerializer(serializers.ModelSerializer):
@@ -103,3 +109,9 @@ class UploadedFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UploadedFile
         fields = ["file", "description", "owner", "access_permissions", "file_size"]
+
+
+class BranchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Branch
+        fields = ['original_file', 'content', 'description']
