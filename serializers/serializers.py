@@ -14,18 +14,26 @@ User = get_user_model()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ("username", 'email', 'password')
+    """
+        Serializer is for creating a new user
+    """
+    password = serializers.CharField(min_length=8)
 
+    class Meta:
+        model = User
+        fields = [
+            'email', 
+            'first_name', 
+            'last_name', 
+            'password', 
+            'username'
+            ]
+        
+    def validate(self, attrs):
+        return super().validate(attrs)
+    
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(
-            username=validated_data["username"],
-            email=validated_data['email'],
-            password=validated_data['password']
-        )
-        EmailAddress.objects.create(user=user, email=user.email, primary=True, verified=True)
-        return user
+        return super().create(validated_data)
 
 class SignInSerializer(serializers.Serializer):
     """
