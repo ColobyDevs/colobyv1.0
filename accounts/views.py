@@ -12,17 +12,11 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def register_user(request):
-    if request.method == 'POST':
-        serializer = UserRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+class UserRegistrationView(generics.CreateAPIView):
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [permissions.AllowAny]
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 class SignInAPIView(generics.GenericAPIView):
     serializer_class = SignInSerializer
