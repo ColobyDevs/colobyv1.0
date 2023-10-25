@@ -1,4 +1,4 @@
-Automate things for CI/CD purposes (like a github action) - auto deploy, etc.
+Automate things with our custom CI/CD pipeline (like a github action) - auto deploy, etc.
 Use the right tools and languages (Java, Kubernetes)
 
 Custom UI to display how an api would work (package, library)
