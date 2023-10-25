@@ -1,4 +1,4 @@
-Automate things for CI/CD purposes (like a github action) - auto deploy, etc.
+Automate things with our custom CI/CD pipeline (like a github action) - auto deploy, etc.
 Use the right tools and languages (Java, Kubernetes)
 
 Custom UI to display how an api would work (package, library)
@@ -10,3 +10,11 @@ Create a page (user profile or so) that displays all the contribution of such us
 
 Add badges to user profiles too
 
+Email Notifications
+
+create secret keys for sign up on other platforms (use coloby as sign up options)
+
+Ability to lock files or make it visible to particular users
+
+Allow contributors to create plugins useful for the room
+Create an Admin page different from Django's admin, etc
