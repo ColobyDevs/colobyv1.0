@@ -23,3 +23,6 @@ management/
 build/
 
 colup.egg-info/
+
+
+db.sqlite3
