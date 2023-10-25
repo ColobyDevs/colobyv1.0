@@ -62,6 +62,7 @@ class Room(BaseModel):
     users = models.ManyToManyField(CustomUser)
     is_private = models.BooleanField(default=False)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="created_rooms", null=True, blank=True)
+    likes = models.ManyToManyField(CustomUser, related_name="liked_rooms", blank=True)
     
     def save(self, *args, **kwargs):
         if not self.unique_link or Room.objects.filter(unique_link=self.unique_link).exists():
@@ -83,6 +84,24 @@ class Message(BaseModel):
 
     def __str__(self):
         return f"{self.room.name} - {self.user.username}: {self.message}"
+
+# A feature where users can create notes to pen ideas down
+class UserNote(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)
+    content = models.TextField()
+    last_saved = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+# Feature Request where room memebers can request a feature or something else
+class FeatureRequest(models.Model):
+    description = models.TextField()
+    votes = models.PositiveIntegerField(default=0)
+    implemented = models.BooleanField(default=False)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class Task(BaseModel):

@@ -2,9 +2,10 @@ from rest_framework import serializers
 from allauth.account.models import EmailAddress
 from accounts.models import CustomUser
 
-from cowork.models import Task, Comment, Message, UploadedFile, Branch
-
-from cowork.models import Task, Comment, Message, UploadedFile, Room
+from cowork.models import (
+    Room, Task, Comment,
+      Message, UploadedFile, 
+      Branch, UserNote, FeatureRequest)
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
@@ -70,6 +71,22 @@ class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = "__all__"
+
+
+class UserNoteSerializer(serializers.Serializer):
+    class Meta:
+        model = UserNote
+        fields = "__all__"
+
+
+
+class FeatureRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeatureRequest
+        fields = '__all__'
+        read_only_fields = ('room', 'user')
+
+
 
 class SendMessageSerializer(serializers.ModelSerializer):
     class Meta:
