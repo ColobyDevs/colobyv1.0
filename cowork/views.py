@@ -123,13 +123,14 @@ def room_create(request):
         A rendered HTML response, or a redirect to the new chat room.
     """
     if request.method == "POST":
+        room_name = request.POST.get("room_name")
+        is_private = request.POST.get("is_private") == "on"
+        if not room_name:
+            messages.error(request, "Room name is required!")
+            return redirect(reverse('create-room'))
         try:
-            room_name = request.POST.get("room_name")
-            # Check if the room should be private
-            is_private = request.POST.get("is_private") == "on"
-
             uid = str(''.join(random.choices(
-                string.ascii_letters + string.digits, k=4)))
+            string.ascii_letters + string.digits, k=4)))
             room_slug = slugify(room_name + "_" + uid)
             room = Room.objects.create(
                 name=room_name,
@@ -143,8 +144,8 @@ def room_create(request):
                 return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
 
         except Exception as e:
-            messages.error(request, "An error occurred during room creation")
-            return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
+                messages.error(request, "An error occurred during room creation")
+                return redirect(reverse('create-room'))
 
     return render(request, 'chat/create.html')
 

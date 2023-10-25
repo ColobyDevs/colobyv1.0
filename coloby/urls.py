@@ -20,11 +20,21 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/auth/", include('accounts.urls')),
+    path("api/v1/accounts/", include('accounts.urls')),
     path("api/v1/", include('cowork.urls')),
     path('views', TemplateView.as_view(template_name='index.html')),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0),name='schema-swagger-ui'),
+    path("accounts/", include("allauth.urls")),
+
+    # DEBUG_TOOL_BAR
+    path("__debug__/", include("debug_toolbar.urls")),
+        
+    path('docs/', schema_view.with_ui('swagger', cache_timeout=0),name='schema-swagger-ui'),
 ]
+
+
+# if settings.DEBUG:
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 # if settings.DEBUG:

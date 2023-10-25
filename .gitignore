@@ -25,4 +25,5 @@ build/
 colup.egg-info/
 
 
-db.sqlite3
+
+.env
