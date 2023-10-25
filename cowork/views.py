@@ -1,3 +1,4 @@
+from rest_framework import status
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -5,13 +6,19 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
-
 from serializers.serializers import (
     TaskSerializer, CommentSerializer,
-    SendMessageSerializer, ReceiveMessageSerializer, 
-    UploadedFileSerializer, BranchSerializer)
-from .models import (Task, Comment, Room, Message, 
-                     UploadedFile, FileAccessLog, Branch)
+    SendMessageSerializer, ReceiveMessageSerializer,
+    UploadedFileSerializer,
+    BranchSerializer, UserNoteSerializer,
+    FeatureRequestSerializer
+
+)
+from .models import (Task, Comment, Room, Message,
+                     UploadedFile,
+                     FileAccessLog, Branch,
+                     UserNote, FeatureRequest
+                     )
 
 from serializers.serializers import TaskSerializer, CommentSerializer, SendMessageSerializer, ReceiveMessageSerializer, UploadedFileSerializer, RoomSerializer
 from .models import Task, Comment, Room, Message, UploadedFile, FileAccessLog
@@ -29,8 +36,22 @@ import random
 import mimetypes
 
 
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission to only allow the owner of an object to edit it.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request, so we'll always allow GET, HEAD, or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Write permissions are only allowed to the owner of the object.
+        return obj.owner == request.user
 
 # private room
+
+
 @login_required
 def index(request, slug):
     room = Room.objects.get(slug=slug)
@@ -66,6 +87,7 @@ def public_chat(request, slug):
         print(f"An error occurred {str(e)}")
         return HttpResponse("An error occured", status=500)
 
+
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
@@ -73,6 +95,7 @@ class RoomViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
 
 class RoomDetail(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -100,34 +123,31 @@ def room_create(request):
         A rendered HTML response, or a redirect to the new chat room.
     """
     if request.method == "POST":
-            room_name = request.POST.get("room_name")
-            is_private = request.POST.get("is_private") == "on"
-            if not room_name:
-                messages.error(request, "Room name is required!")
-                return redirect(reverse('create-room'))
-            try:
+        room_name = request.POST.get("room_name")
+        is_private = request.POST.get("is_private") == "on"
+        if not room_name:
+            messages.error(request, "Room name is required!")
+            return redirect(reverse('create-room'))
+        try:
+            uid = str(''.join(random.choices(
+            string.ascii_letters + string.digits, k=4)))
+            room_slug = slugify(room_name + "_" + uid)
+            room = Room.objects.create(
+                name=room_name,
+                slug=room_slug,
+                is_private=is_private,
+                created_by=request.user)
 
-                uid = str(''.join(random.choices(
-                    string.ascii_letters + string.digits, k=4)))
-                room_slug = slugify(room_name + "_" + uid)
-                room = Room.objects.create(
-                    name=room_name, 
-                    slug=room_slug, 
-                    is_private=is_private,
-                    created_by=request.user)
+            if is_private:
+                return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
+            else:
+                return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
 
-                if is_private:
-                    return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
-                else:
-                    return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
-
-            except Exception as e:
+        except Exception as e:
                 messages.error(request, "An error occurred during room creation")
                 return redirect(reverse('create-room'))
 
-        
     return render(request, 'chat/create.html')
-
 
 
 @login_required
@@ -150,15 +170,15 @@ def room_join(request):
             messages.error(request, "Room does not exist!")
             return HttpResponse(status=500)
 
-        
         if not room.is_private or request.user in room.users.all():
             return redirect(reverse('chat', kwargs={'slug': room.slug}))
         else:
             messages.error(request, "Access denied, this is a private room!")
             return HttpResponseForbidden("Access denied, this is a private room!")
-            
+
     return HttpResponseBadRequest("Unable to join the room.")
-    
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def send_message(request, room_slug):
@@ -179,17 +199,19 @@ def send_message(request, room_slug):
 
             try:
                 room = Room.objects.get(slug=room_slug)
-                message = Message.objects.create(room=room, user=user, message=message_text)
+                message = Message.objects.create(
+                    room=room, user=user, message=message_text)
                 return Response({"status": "Message successfully sent!"}, status=status.HTTP_201_CREATED)
             except Room.DoesNotExist:
                 raise Http404("Room does not exist!")
             except Exception as e:
                 messages.error(f"Error occurred: {str(e)}")
                 return HttpResponse(status=500)
-        
+
         return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     return Response({"error": "Invalid request method."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -208,7 +230,8 @@ def get_message(request, room_slug):
             room = Room.objects.get(slug=room_slug)
             messages = Message.objects.filter(room=room).order_by("created_at")
 
-            serialized_messages = ReceiveMessageSerializer(messages, many=True).data
+            serialized_messages = ReceiveMessageSerializer(
+                messages, many=True).data
 
             return Response({"messages": serialized_messages}, status=status.HTTP_200_OK)
         except Room.DoesNotExist:
@@ -216,9 +239,10 @@ def get_message(request, room_slug):
         except Exception as e:
             messages.error(f"Error occurred: {str(e)}")
             return HttpResponse(status=500)
-    
+
     return Response({"error": "Invalid request method."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
+
+
 class TaskListCreateView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -247,14 +271,68 @@ class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
+class UserNoteCreateView(generics.ListCreateAPIView):
+    queryset = UserNote.objects.all()
+    serializer_class = UserNoteSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+
+    def perform_create(self, serializer):
+        return serializer.save(user=self.request.user)
+
+
+class UserNoteRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = UserNote.objects.all()
+    serializer_class = UserNoteSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class FeatureRequestListCreateView(generics.ListCreateAPIView):
+    serializer_class = FeatureRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        room_id = self.kwargs['room_id']
+        user_id = self.request.user.id
+        return FeatureRequest.objects.filter(room=room_id, user=user_id)
+
+    def perform_create(self, serializer):
+        room_id = self.kwargs['room_id']
+        serializer.save(room_id=room_id, user=self.request.user)
+
+
+class FeatureRequestRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = FeatureRequest.objects.all()
+    serializer_class = FeatureRequestSerializer
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def like_room(request, room_slug):
+    try:
+        room = Room.objects.get(slug=room_slug)
+        user = request.user
+
+        if user in room.likes.all():
+            room.likes.remove(user)
+            return Response({"message": "Room unliked successfully."}, status=status.HTTP_200_OK)
+        else:
+            room.likes.add(user)
+            return Response({"message": "Room liked successfully."}, status=status.HTTP_200_OK)
+    except Room.DoesNotExist:
+        return Response({"error": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class IsUploaderOrReadOnly(permissions.BasePermission):
     """
     Custom permission class to only allow the uploader of the file to  make changes to said file.
     """
+
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         return obj.uploaded_by == request.user
 
 
@@ -285,7 +363,7 @@ def upload_file(request, room_slug):
 
             # return redirect('file_list', room_slug=room_slug)
             return Response({"status": "File uploaded successfully."}, status=status.HTTP_200_OK)
-        
+
         except Room.DoesNotExist:
             raise Http404("Room does not exist!")
         except Exception as e:
@@ -294,7 +372,8 @@ def upload_file(request, room_slug):
 
     # return render(request, 'file_manager/upload_file.html')
     return Response({"error": "Invalid request method!"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
+
+
 class UploadFileView(generics.CreateAPIView):
     queryset = UploadedFile.objects.all()
     serializer_class = UploadedFileSerializer
@@ -309,9 +388,11 @@ class BranchList(generics.ListCreateAPIView):
     queryset = Branch.objects.all()
     serializer_class = BranchSerializer
 
+
 class BranchDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Branch.objects.all()
     serializer_class = BranchSerializer
+
 
 @method_decorator(login_required, name="dispatch")
 class FileListAPIView(APIView):
@@ -361,13 +442,14 @@ def file_download(request, room_slug, file_id):
         content_type, _ = mimetypes.guess_type(file_path)
 
         if upload_file.uploaded_by == request.user or request.user in room.users.all():
-            response = FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
+            response = FileResponse(
+                open(file_path, 'rb'), content_type='application/octet-stream')
             response['Content-Type'] = content_type
             response['Content-Disposition'] = f'attachment; filename="{upload_file.file.name}"'
             return response
         else:
             return HttpResponse("Access Denied!", status=403)
-    
+
     except Room.DoesNotExist:
         raise Http404("Room does not exist!")
     except UploadedFile.DoesNotExist:
@@ -375,6 +457,7 @@ def file_download(request, room_slug, file_id):
     except Exception as e:
         messages.error(f"Error occurred: {str(e)}")
         return HttpResponse(status=500)
+
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -413,6 +496,7 @@ def edit_uploaded_file(request, file_id):
         # messages.error(f"Error occurred: {str(e)}")
         # return HttpResponse(status=500)
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @login_required
 def file_access_log(request, file_id):
