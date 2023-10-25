@@ -1,7 +1,9 @@
 Automate things for CI/CD purposes (like a github action) - auto deploy, etc.
 Use the right tools and languages (Java, Kubernetes)
 
-Custom UI to display how an api would work (package, library)
+Static page generation using Jekyll or any Static page generation tool to display how an api would work (package, library)
+--- Jekyll 🤝 API (trying something out 😉😁)
+
 Terminal upload (get cwd, create branch locally and then push online, merge, get commit history, clone a repo locally)
 Create a commit history UI for the number of times commited
 Ability to fork from one group to another group
