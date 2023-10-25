@@ -14,7 +14,7 @@ from .models import (Task, Comment, Room, Message,
                      UploadedFile, FileAccessLog, Branch)
 
 from serializers.serializers import TaskSerializer, CommentSerializer, SendMessageSerializer, ReceiveMessageSerializer, UploadedFileSerializer, RoomSerializer
-from .models import Task, Comment, Room, Message, UploadedFile, FileAccessLog
+
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -245,19 +245,19 @@ class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class IsUploaderOrReadOnly(permissions.BasePermission):
-    """
-    Custom permission class to only allow the uploader of the file to  make changes to said file.
-    """
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
+# class IsUploaderOrReadOnly(permissions.BasePermission):
+#     """
+#     Custom permission class to only allow the uploader of the file to  make changes to said file.
+#     """
+#     def has_object_permission(self, request, view, obj):
+#         if request.method in permissions.SAFE_METHODS:
+#             return True
         
-        return obj.uploaded_by == request.user
+#         return obj.uploaded_by == request.user
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def upload_file(request, room_slug):
     """
     Uploads a file to a chat room.
@@ -297,7 +297,7 @@ class UploadFileView(generics.CreateAPIView):
     queryset = UploadedFile.objects.all()
     serializer_class = UploadedFileSerializer
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [permissions.IsAuthenticated, IsUploaderOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
