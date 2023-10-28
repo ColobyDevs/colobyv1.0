@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from allauth.account.models import EmailAddress
 from accounts.models import CustomUser
+from django.contrib.auth.hashers import check_password
 
 from cowork.models import (
     Room, Task, Comment,
@@ -67,6 +68,33 @@ class SignInSerializer(serializers.Serializer):
         refresh = RefreshToken.for_user(user)
         return {"Info": f"Welcome {username}", "access_token": str(refresh.access_token)}
 
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """This serializer is for changing a user's password"""
+
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    confirm_new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        
+        if check_password(attrs["old_password"], user.password) is False:
+            raise serializers.ValidationError({
+                            "old_password":"Please recheck the old password"
+                            })
+    
+        elif attrs["new_password"] != attrs["confirm_new_password"]:
+            raise serializers.ValidationError({
+                "confirm_password":"Please confirm the new password"
+                })
+        
+        return attrs
+    
+    
+    
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
