@@ -2,7 +2,7 @@ from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from serializers.serializers import UserRegistrationSerializer, SignInSerializer
+from serializers.serializers import UserRegistrationSerializer, SignInSerializer, ChangePasswordSerializer
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
@@ -26,7 +26,22 @@ class SignInAPIView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             return Response(serializer.data)
+        
 
+class ChangePasswordView(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        
+        if serializer.is_valid(raise_exception=True):
+            user = self.request.user
+            user.set_password(serializer.validated_data["confirm_new_password"])   
+            user.save()         
+            return Response({
+                "message": "password changed successfully"
+            }, status=status.HTTP_200_OK)
 
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
