@@ -80,23 +80,28 @@ class RoomSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SendMessageSerializer(serializers.ModelSerializer):
+    media_file = serializers.FileField(allow_empty_file=True, required=False)
     class Meta:
         model = Message
         fields = "__all__"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def create(self, validated_data):
+        media_file = validated_data.pop("media_file", None)
+        message = Message.objects.create(**validated_data)
 
-        self.fields['room'].required = True
-        self.fields['user'].required = True
-        self.fields['message'].required = True
+        if media_file:
+            message.media = media_file
+            message.save()
+
+        return message
+
 
 class ReceiveMessageSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.username")
 
     class Meta:
         model = Message
-        fields = ["user", "message", "created_at"]
+        fields = ["user", "message", "media", "created_at"]
 
 
 class TaskSerializer(serializers.ModelSerializer):

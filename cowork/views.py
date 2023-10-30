@@ -158,11 +158,11 @@ def room_join(request):
             return HttpResponseForbidden("Access denied, this is a private room!")
             
     return HttpResponseBadRequest("Unable to join the room.")
-    
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def send_message(request, room_slug):
-    """Sends a message to a chat room.
+    """Sends a message to a chat room, including media upload (optional).
 
     Args:
         request: The HTTP request.
@@ -175,18 +175,24 @@ def send_message(request, room_slug):
         serializer = SendMessageSerializer(data=request.data)
         if serializer.is_valid():
             user = request.user
-            message_text = serializer.validated_data.get("message_text")
+            room = Room.objects.get(slug=room_slug)
+            media_file = request.data.get("media_file")
+            
+            if media_file:
+                media_msg = Message.objects.create(room=room, user=user, media=media_file)
 
-            try:
-                room = Room.objects.get(slug=room_slug)
-                message = Message.objects.create(room=room, user=user, message=message_text)
-                return Response({"status": "Message successfully sent!"}, status=status.HTTP_201_CREATED)
-            except Room.DoesNotExist:
-                raise Http404("Room does not exist!")
-            except Exception as e:
-                messages.error(f"Error occurred: {str(e)}")
-                return HttpResponse(status=500)
-        
+            message_text = serializer.validated_data.get("message_text")
+            
+            if message_text:
+                try:
+                    message = Message.objects.create(room=room, user=user, message=message_text)
+                    return Response({"status": "Message successfully sent!"}, status=status.HTTP_201_CREATED)
+                except Room.DoesNotExist:
+                    raise Http404("Room does not exist!")
+                except Exception as e:
+                    messages.error(f"Error occurred: {str(e)}")
+                    return HttpResponse(status=500)
+            
         return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
     return Response({"error": "Invalid request method."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
