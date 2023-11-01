@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "dj_rest_auth",
     "dj_rest_auth.registration",
     
-    "debug_toolbar"
+    # "debug_toolbar"
 
 ]
 
@@ -225,9 +225,9 @@ SOCIALACCOUNT_PROVIDERS = {
 
 # DEBUG_TOOLBAR_SETTINGS
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-    "localhost",
-    "coloby.onrender.com"
-]
+# INTERNAL_IPS = [
+#     "127.0.0.1",
+#     "localhost",
+#     "coloby.onrender.com"
+# ]
 
