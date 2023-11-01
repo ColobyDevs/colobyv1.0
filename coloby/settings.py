@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     # "commands",
     "rest_framework",
     "rest_framework.authtoken",
+    'corsheaders',
     # Documentation with Swagger
     'rest_framework_swagger',
     'drf_yasg',
