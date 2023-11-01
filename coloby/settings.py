@@ -225,15 +225,10 @@ SOCIALACCOUNT_PROVIDERS = {
 
 
 
-
-CORS_ORIGIN_ALLOW_ALL = False
-
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8080",
-    "http://localhost:3001"
-]
+CORS_ORIGIN_ALLOW_ALL = config('CORS_ORIGIN_ALLOW_ALL', default=False, cast=bool)
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in config('CORS_ALLOWED_ORIGINS').split(',')]
+CORS_ALLOW_METHODS = [method.strip() for method in config('CORS_ALLOW_METHODS').split(',')]
+CORS_ALLOW_HEADERS = [header.strip() for header in config('CORS_ALLOW_HEADERS').split(',')]
 
 # DEBUG_TOOLBAR_SETTINGS
 
