@@ -25,6 +25,7 @@ djangorestframework==3.14.0
 djangorestframework-jwt==1.11.0
 djangorestframework-simplejwt==5.3.0
 drf-yasg==1.21.7
+gunicorn
 frozenlist==1.2
 hyperlink==21.0.0
 idna==3.4
