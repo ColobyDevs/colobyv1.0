@@ -14,7 +14,18 @@ urlpatterns = [
     path('room/tasks/<int:pk>/', views.TaskRetrieveUpdateDestroyView.as_view(), name='task-detail'),
     path('room/tasks/<int:pk>/comments/', views.CommentCreateView.as_view(), name='comment-create'),
     path('room/comments/<int:pk>/', views.CommentRetrieveUpdateDestroyView.as_view(), name='comment-detail'),
+    path('room/like/<str:room_slug>/', views.like_room, name='like-room'),
 
+    # usernote endpoints (To F.Es the feature requires autosave 😉)
+    path('user/notes/', views.UserNoteCreateView.as_view(), name='usernote-list-create'),
+    path('user/notes/<int:pk>/', views.UserNoteRetrieveUpdateDestroyView.as_view(), name='usernote-retrieve-update-destroy'),
+
+
+    # feature requests
+    path('rooms/<int:room_id>/feature-requests/', views.FeatureRequestListCreateView.as_view(), name='feature-request-list-create'),
+    path('rooms/<int:room_id>/feature-requests/<int:pk>/', views.FeatureRequestRetrieveUpdateDestroyView.as_view(), name='feature-request-retrieve-update-destroy'),
+
+    # file upload endpoints
     path('chat/upload/<str:room_slug>/', views.upload_file, name='upload-file'),
     path('chat/list/<str:room_slug>/', views.FileListAPIView.as_view(), name='file-list'),
     path('api/branches/', views.BranchList.as_view(), name='branch-list'),
