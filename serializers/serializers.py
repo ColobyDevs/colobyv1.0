@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from allauth.account.models import EmailAddress
 from accounts.models import CustomUser
+from django.contrib.auth.hashers import check_password
 
 from cowork.models import (
     Room, Task, Comment,
@@ -16,6 +17,11 @@ User = get_user_model()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    """
+        Serializer is for creating a new user
+    """
+    password = serializers.CharField(min_length=8, write_only=True)
+
     class Meta:
         model = CustomUser
         fields = ('email', 'password', 'first_name', 'username')
@@ -24,14 +30,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     extra_fields = ['first_name', 'username']
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(
-            email=validated_data['email'],
-            password=validated_data['password'],
-            first_name=validated_data.get('first_name'),
-            username=validated_data.get('username')
-        )
-        return user
-
+        user = CustomUser.objects.create_user(**validated_data)
+        return user 
 
 class SignInSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -51,6 +51,33 @@ class SignInSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """This serializer is for changing a user's password"""
+
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    confirm_new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        
+        if check_password(attrs["old_password"], user.password) is False:
+            raise serializers.ValidationError({
+                            "old_password":"Please recheck the old password"
+                            })
+    
+        elif attrs["new_password"] != attrs["confirm_new_password"]:
+            raise serializers.ValidationError({
+                "confirm_password":"Please confirm the new password"
+                })
+        
+        return attrs
+    
+    
+    
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:

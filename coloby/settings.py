@@ -89,6 +89,7 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
 DATABASES["default"] = dj_database_url.parse("postgres://coloby_user:Cr2n8ZKORRuBWymCCWK7YUyiJ8QP8UxA@dpg-ckvflv3amefc7385l0h0-a.oregon-postgres.render.com/coloby")
 
 # AUTH_PASSWORD_VALIDATORS = [
@@ -227,3 +228,4 @@ INTERNAL_IPS = [
     "localhost",
 ]
 
+CSRF_COOKIE_SECURE = True
