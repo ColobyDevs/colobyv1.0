@@ -9,11 +9,11 @@ urlpatterns = [
     path("register/", UserRegistrationView.as_view(), name="register"),
     
     path("log-in/", SignInAPIView.as_view(), name="log-in"),
-    path(
-        "logout/",
-        auth_views.LogoutView.as_view(template_name="accounts/logout.html"),
-        name="logout",
-    ),
+    # path(
+    #     "logout/",
+    #     auth_views.LogoutView.as_view(template_name="accounts/logout.html"),
+    #     name="logout",
+    # ),
     path('log-out/', LogoutView.as_view(), name="log-out"),
 
     # OAUTH LOGINS

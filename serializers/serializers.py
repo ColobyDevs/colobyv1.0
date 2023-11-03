@@ -1,11 +1,12 @@
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 from allauth.account.models import EmailAddress
 from accounts.models import CustomUser
 
 from cowork.models import (
     Room, Task, Comment,
-      Message, UploadedFile, 
-      Branch, UserNote, FeatureRequest)
+    Message, UploadedFile,
+    Branch, UserNote, FeatureRequest)
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
@@ -15,67 +16,52 @@ User = get_user_model()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    """
-        Serializer is for creating a new user
-    """
-    password = serializers.CharField(min_length=8)
-
     class Meta:
-        model = User
-        fields = [
-            'email', 
-            'first_name', 
-            'last_name', 
-            'password', 
-            'username'
-            ]
-        
-    def validate(self, attrs):
-        return super().validate(attrs)
-    
+        model = CustomUser
+        fields = ('email', 'password', 'first_name', 'username')
+
+    # Add any extra fields you want to include in the registration form.
+    extra_fields = ['first_name', 'username']
+
     def create(self, validated_data):
-        return super().create(validated_data)
+        user = CustomUser.objects.create_user(
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name'),
+            username=validated_data.get('username')
+        )
+        return user
+
 
 class SignInSerializer(serializers.Serializer):
-    """
-    Serializer for signing in a user
-    """
-    
-    email = serializers.CharField(write_only=True)
-    password = serializers.CharField(write_only=True)
-    def validate(self, attrs: dict):
-        """
-        This is for validating credentials for signing in
-        """
-        error_messages = {
-             "error-mssg-1": {
-                "credential_error": "Please recheck the credentials provided."
-            },
-        }
-        
-        user = User.objects.filter(email=attrs["email"]).first()
-        if user:
-            if user.check_password(attrs["password"]):
-                return user
-            else: # This raises error if the password provided is wrong
-                raise serializers.ValidationError(error_messages["error-mssg-1"])
-        else: # This raises error if the user doesn't exist
-            raise serializers.ValidationError(error_messages["error-mssg-1"])
-        
-    def to_representation(self, user):
-        username =  User.objects.get(email=user).username
-        refresh = RefreshToken.for_user(user)
-        return {"Info": f"Welcome {username}", "access_token": str(refresh.access_token)}
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        user = authenticate(request=self.context.get(
+            'request'), username=email, password=password)
+
+        if user is None:
+            raise serializers.ValidationError(
+                'Invalid credentials. Please recheck your email and password.')
+
+        attrs['user'] = user
+        return attrs
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ("username", "email", "password")
-    
+
+
 class RoomSerializer(serializers.ModelSerializer):
     users = CustomUserSerializer(many=True)
     created_by = CustomUserSerializer()
+
     class Meta:
         model = Room
         fields = "__all__"
@@ -87,13 +73,11 @@ class UserNoteSerializer(serializers.Serializer):
         fields = "__all__"
 
 
-
 class FeatureRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureRequest
         fields = '__all__'
         read_only_fields = ('room', 'user')
-
 
 
 class SendMessageSerializer(serializers.ModelSerializer):
@@ -107,6 +91,7 @@ class SendMessageSerializer(serializers.ModelSerializer):
         self.fields['room'].required = True
         self.fields['user'].required = True
         self.fields['message'].required = True
+
 
 class ReceiveMessageSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.username")
@@ -131,9 +116,11 @@ class CommentSerializer(serializers.ModelSerializer):
 class UploadedFileSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="uploaded_by.username")
     access_permissions = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = UploadedFile
-        fields = ["file", "description", "owner", "access_permissions", "file_size"]
+        fields = ["file", "description", "owner",
+                  "access_permissions", "file_size"]
 
 
 class BranchSerializer(serializers.ModelSerializer):

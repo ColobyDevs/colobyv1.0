@@ -9,9 +9,10 @@ from rest_framework.views import APIView
 from serializers.serializers import (
     TaskSerializer, CommentSerializer,
     SendMessageSerializer, ReceiveMessageSerializer,
-    UploadedFileSerializer,
+    RoomSerializer,
     BranchSerializer, UserNoteSerializer,
-    FeatureRequestSerializer
+    FeatureRequestSerializer,
+    UploadedFileSerializer
 
 )
 from .models import (Task, Comment, Room, Message,
@@ -20,8 +21,6 @@ from .models import (Task, Comment, Room, Message,
                      UserNote, FeatureRequest
                      )
 
-from serializers.serializers import TaskSerializer, CommentSerializer, SendMessageSerializer, ReceiveMessageSerializer, UploadedFileSerializer, RoomSerializer
-from .models import Task, Comment, Room, Message, UploadedFile, FileAccessLog
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages

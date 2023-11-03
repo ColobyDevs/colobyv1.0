@@ -1,5 +1,6 @@
 import datetime
 import os
+import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -11,7 +12,7 @@ SECRET_KEY = "django-insecure-q8$1^k7t36@2_o#ddypqs2xn(0vsn07y6g@ynj_gq9zzo$_)2)
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "daphne",
@@ -88,6 +89,7 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+DATABASES["default"] = dj_database_url.parse("postgres://coloby_user:Cr2n8ZKORRuBWymCCWK7YUyiJ8QP8UxA@dpg-ckvflv3amefc7385l0h0-a.oregon-postgres.render.com/coloby")
 
 # AUTH_PASSWORD_VALIDATORS = [
 #     {
