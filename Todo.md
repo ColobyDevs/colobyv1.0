@@ -19,4 +19,3 @@ create secret keys for sign up on other platforms (use coloby as sign up options
 Ability to lock files or make it visible to particular users
 
 Allow contributors to create plugins useful for the room
-Create an Admin page different from Django's admin, etc
