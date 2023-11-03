@@ -51,6 +51,9 @@
                     <div class="message">
                         <span class="username">{{ message.user.username }}:</span>
                         <span class="content">{{ message.message }}</span>
+                        {% if message.media %}
+                            <a href="{{ message.media.file.url }}" target="_blank">View Media</a>
+                        {% endif %}
                         <span class="time">{{ message.created_at|naturaltime }}</span>
                     </div>
                 {% endfor %}
@@ -60,11 +63,10 @@
     
     <div hx-target="this" hx-swap="outerHTML" ws-connect="/chat/{{ slug }}/">
      
-        <form hx-post="." ws-send>
+        <form hx-post="." ws-send enctype="multipart/form-data">
             {% csrf_token %}
-            
             <input name="message" placeholder="Type your message..." autocomplete="off">
-            
+            <input type="file" name="media">
             <button type="submit">Send</button>
         </form>
     </div>
