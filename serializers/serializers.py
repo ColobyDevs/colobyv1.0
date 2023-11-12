@@ -169,3 +169,18 @@ class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
         fields = ['original_file', 'content', 'description']
+
+
+class UpdateUserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+        'first_name',
+        'email',
+        'last_name',
+        'username'
+        ]
+
+    def validate(self, attrs):
+        return super().validate(attrs)
+    
