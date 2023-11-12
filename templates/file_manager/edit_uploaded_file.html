@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Edit Uploaded File</h2>
+  {% if form.errors %}
+  <div class="alert alert-danger">
+    <strong>Error: </strong> An error occurred during form submission.
+  </div>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+  </form>
+{% endblock %}

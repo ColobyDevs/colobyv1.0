@@ -1,12 +1,18 @@
-from pathlib import Path
+import datetime
 import os
+import dj_database_url
+from pathlib import Path
+from datetime import timedelta
+from dotenv import load_dotenv
+load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-q8$1^k7t36@2_o#ddypqs2xn(0vsn07y6g@ynj_gq9zzo$_)2)"
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "daphne",
@@ -15,6 +21,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.humanize",
     "django.contrib.staticfiles",
 
     "channels",
@@ -22,6 +29,21 @@ INSTALLED_APPS = [
     "accounts",
     "cowork",
     # "commands",
+    "rest_framework",
+    "rest_framework.authtoken",
+    # Documentation with Swagger
+    'rest_framework_swagger',
+    'drf_yasg',
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "tinymce",
+ 
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
+    
+    "debug_toolbar"
 
 ]
 
@@ -33,6 +55,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    # Add the account middleware:
+    # "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "coloby.urls"
@@ -48,6 +73,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # `allauth` needs this from django
+                'django.template.context_processors.request',
             ],
         },
     },
@@ -62,6 +89,8 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+DATABASES["default"] = dj_database_url.parse("postgres://coloby_user:Cr2n8ZKORRuBWymCCWK7YUyiJ8QP8UxA@dpg-ckvflv3amefc7385l0h0-a.oregon-postgres.render.com/coloby")
 
 # AUTH_PASSWORD_VALIDATORS = [
 #     {
@@ -94,6 +123,8 @@ STATICFILES_DIRS = [
     #  os.path.join(BASE_DIR, "frontend/build/static"),
 ]
 
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -105,6 +136,97 @@ CHANNEL_LAYERS = {
     }
 }
 
-AUTH_USER_MODEL = "accounts.User"
-LOGIN_REDIRECT_URL = "index"
-LOGIN_URL = "login"
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+    # 'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    # `allauth` specific authentication methods, such as login by email
+    'allauth.account.auth_backends.AuthenticationBackend',    
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
+
+
+# SIMPLEJWT SETTINGS
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
+    "SLIDING_TOKEN_LIFETIME": timedelta(days=7),
+    "SLIDING_TOKEN_REFRESH_LIFETIME_GRACE_PERIOD": timedelta(days=1),
+    "SLIDING_TOKEN_REFRESH_LIFETIME_ALLOWANCE": timedelta(days=1),
+    "SLIDING_TOKEN_REFRESH_AFTER_LIFETIME": timedelta(days=1),
+    "SLIDING_TOKEN_LIFETIME_GRACE_PERIOD": timedelta(days=1),
+    "SLIDING_TOKEN_SAVE_BODY": True,
+
+    "AUTH_HEADER_TYPES": ("Bearer", "Token"),
+}
+
+TINYMCE_DEFAULT_CONFIG = {
+    'height': 360,
+    'width': 800,
+    'menubar': False,
+    'theme': 'silver',  # it's set to 'advanced' by default
+    'plugins': 'advlist autolink lists link image charmap print preview anchor filemanager fullscreen media spellchecker',
+    'toolbar': 'undo redo | formatselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
+    'custom_undo_redo_levels': 3,
+    'content_css': ['static/css'],
+}
+
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = "accounts.CustomUser"
+
+
+# JWT_AUTH = {
+#     'JWT_SECRET_KEY': 'whateverlol',
+#     'JWT_ALGORITHM': 'HS256',
+#     'JWT_ALLOW_REFRESH': True,    
+#     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
+# }
+
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_LOGOUT_ON_GET = True
+
+
+# SOCIAL_LOGIN_SETTINGS
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": os.getenv('CLIENT_ID'),  
+            "secret": os.getenv('CLIENT_SECRET'),                                     
+        },
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "VERIFIED_EMAIL": True,
+    },
+}
+
+
+
+# DEBUG_TOOLBAR_SETTINGS
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+]
+
+CSRF_COOKIE_SECURE = True

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Task, Comment
+from .models import Task, Comment, Message, UploadedFile, Branch
 
 class TaskForm(forms.ModelForm):
     class Meta:
@@ -13,3 +13,18 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['text']
+
+class UploadedFileForm(forms.ModelForm):
+    class Meta:
+        model = UploadedFile
+        fields = ['file', 'content', 'description']
+        widgets = {
+            'content': forms.Textarea(attrs={'class': 'tinymce'}),
+            'file': forms.FileInput(attrs={'accept': 'image/*, video/*, audio/*, application/pdf'})
+        }
+
+
+class BranchForm(forms.ModelForm):
+    class Meta:
+        model = Branch
+        fields = ['original_file', 'content', 'description']
