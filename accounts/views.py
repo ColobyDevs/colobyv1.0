@@ -2,7 +2,12 @@ from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from serializers.serializers import UserRegistrationSerializer, SignInSerializer, ChangePasswordSerializer
+from serializers.serializers import (
+    UserRegistrationSerializer, 
+    SignInSerializer, 
+    ChangePasswordSerializer,
+    UpdateUserProfileSerializer,
+)
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
@@ -68,4 +73,16 @@ class LogoutView(APIView):
     
 
 
+class UpdateUserProfileView(generics.RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UpdateUserProfileSerializer
+    lookup_field = 'id'
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+    
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+        
     
