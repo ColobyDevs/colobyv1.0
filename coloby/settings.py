@@ -13,7 +13,9 @@ SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
+
 ALLOWED_HOSTS = config("ALLOWED_HOSTS").split(" ")
+
 
 INSTALLED_APPS = [
     "daphne",
@@ -93,8 +95,10 @@ DATABASES = {
     }
 }
 
+
 database_url = config("DATABASE_URL")
 DATABASES["default"] = dj_database_url.parse(database_url)
+
 
 # AUTH_PASSWORD_VALIDATORS = [
 #     {
@@ -127,6 +131,7 @@ else:
   STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     
 MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -238,3 +243,4 @@ CORS_ALLOW_HEADERS = [header.strip() for header in config('CORS_ALLOW_HEADERS').
 #     "coloby.onrender.com"
 # ]
 
+CSRF_COOKIE_SECURE = True
