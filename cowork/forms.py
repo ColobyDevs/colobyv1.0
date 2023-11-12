@@ -19,7 +19,8 @@ class UploadedFileForm(forms.ModelForm):
         model = UploadedFile
         fields = ['file', 'content', 'description']
         widgets = {
-            'content': forms.Textarea(attrs={'class': 'tinymce'})
+            'content': forms.Textarea(attrs={'class': 'tinymce'}),
+            'file': forms.FileInput(attrs={'accept': 'image/*, video/*, audio/*, application/pdf'})
         }
 
 
