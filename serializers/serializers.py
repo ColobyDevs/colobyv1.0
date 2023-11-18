@@ -70,7 +70,8 @@ class SignInSerializer(serializers.Serializer):
         refresh = RefreshToken.for_user(instance)
         return {
             "refresh_token":str(refresh), 
-            "access_token": str(refresh.access_token)
+            "access_token": str(refresh.access_token),
+	    "user_id": user.id
             }
 
 
