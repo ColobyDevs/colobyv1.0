@@ -34,22 +34,44 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user 
 
 class SignInSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField()
+    """
+    Serializer for signing in
+    """
+    
+    email = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
 
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
+    def validate(self, attrs: dict):
+        """
+        This is for validating credentiials for signing in
+        """
+        error_messages = {
+            "error-mssg-1": {
+                "error": "user doesn't exist"
+            },
+             "error-mssg-2": {
+                "credential_error": "Please recheck the credentials provided."
+            },
+        }
 
-        user = authenticate(request=self.context.get(
-            'request'), username=email, password=password)
+        user = User.objects.filter(email=attrs["email"]).first()
+        if (user is None):
+            raise serializers.ValidationError(error_messages["error-mssg-1"])
+    
+        elif (user and user.check_password(attrs["password"])):
+            return user
+        
+        else:
+            raise serializers.ValidationError(error_messages['error-mssg-2'])
 
-        if user is None:
-            raise serializers.ValidationError(
-                'Invalid credentials. Please recheck your email and password.')
-
-        attrs['user'] = user
-        return attrs
+    
+    def to_representation(self, instance):
+        user = User.objects.get(email=instance.email)
+        refresh = RefreshToken.for_user(instance)
+        return {
+            "refresh_token":str(refresh), 
+            "access_token": str(refresh.access_token)
+            }
 
 
 class ChangePasswordSerializer(serializers.Serializer):

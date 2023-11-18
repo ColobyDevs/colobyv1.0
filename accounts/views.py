@@ -84,5 +84,3 @@ class UpdateUserProfileView(generics.RetrieveUpdateAPIView):
     
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
-        
-    
