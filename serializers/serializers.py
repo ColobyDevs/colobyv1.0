@@ -109,12 +109,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 
 class RoomSerializer(serializers.ModelSerializer):
-    users = CustomUserSerializer(many=True)
-    created_by = CustomUserSerializer()
+    users = CustomUserSerializer(many=True, read_only=True)
+    created_by = CustomUserSerializer(read_only=True)
+    slug = serializers.SlugField(read_only=True)
 
     class Meta:
         model = Room
         fields = "__all__"
+
 
 
 class UserNoteSerializer(serializers.Serializer):
