@@ -62,7 +62,7 @@ class Room(BaseModel):
     users = models.ManyToManyField(CustomUser)
     is_private = models.BooleanField(default=False)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="created_rooms", null=True, blank=True)
-    created_on = models.DateTimeField(auto_now_add=True)
+    # created_on = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(CustomUser, related_name="liked_rooms", blank=True)
     
     def save(self, *args, **kwargs):
