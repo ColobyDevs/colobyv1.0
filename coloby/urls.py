@@ -27,7 +27,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
 
     # DEBUG_TOOL_BAR
-    path("__debug__/", include("debug_toolbar.urls")),
+    # path("__debug__/", include("debug_toolbar.urls")),
         
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0),name='schema-swagger-ui'),
 ]

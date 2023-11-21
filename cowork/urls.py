@@ -5,10 +5,9 @@ from cowork import views
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="base.html"), name='index'),
-    path("chat/room/<str:unique_link>/", views.index, name='chat'),
-    path("create/", views.room_create, name='room-create'),
-    path("join/", views.room_join, name='room-join'),
-    path('public-room/<slug:slug>/', views.public_chat, name='public-room'),
+    path("chat/room/<str:room_slug>/", views.RoomDetailView.as_view(), name='chat'),
+    path("room/", views.RoomCreateJoinView.as_view(), name='room-create-join'),
+    # path('public-room/<slug:slug>/', views.public_chat, name='public-room'),
     # path('post_message/', views.post_message, name='post-message'),
     path('room/<slug:slug>/tasks/', views.TaskListCreateView.as_view(), name='task-list'),
     path('room/tasks/<int:pk>/', views.TaskRetrieveUpdateDestroyView.as_view(), name='task-detail'),
@@ -36,6 +35,4 @@ urlpatterns = [
     path('chat/access-log/<int:file_id>/', views.file_access_log, name='file_access_log'),
     path('api/chat/send/<slug:room_slug>/', views.send_message, name='send-message'), 
     path('api/chat/get/<slug:room_slug>/', views.get_message, name='get-message'),
-    path('api/room/create/', views.RoomViewSet.as_view({'post': 'create'})),
-    path('api/room/<int:pk>/', views.RoomDetail.as_view(), name='room-detail'),
 ]

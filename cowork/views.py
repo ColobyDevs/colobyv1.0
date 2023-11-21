@@ -61,121 +61,76 @@ def index(request, slug):
     return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks})
 
 
-@login_required
-def public_chat(request, slug):
-    """
-    Displays a public chat room.
+class RoomCreateJoinView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    Args:
-        request: The HTTP request.
-        slug: The slug of the chat room.
+    def post(self, request, *args, **kwargs):
+        action = request.data.get("action")
+        if action == "create":
+            return self.create_room(request)
+        elif action == "join":
+            return self.join_room(request)
+        else:
+            return Response({"detail": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
 
-    Returns:
-        A rendered HTML response.
-    """
+    def create_room(self, request):
+        room_name = request.data.get("room_name")
+        is_private = request.data.get("is_private", False)
 
-    try:
-        room = get_object_or_404(Room, slug=slug, is_private=False)
-        public_projects = Room.objects.filter(is_private=False)
-        messages = Message.objects.filter(room=room).order_by('created_at')
-        tasks = Task.objects.filter(room=room)
-        return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks, 'public_projects': public_projects})
-    except Room.DoesNotExist:
-        return HttpResponse("Room not found!", status=404)
-    except Exception as e:
-        print(f"An error occurred {str(e)}")
-        return HttpResponse("An error occured", status=500)
+        if not room_name:
+            return Response({"detail": "Room name is required!"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-class RoomViewSet(viewsets.ModelViewSet):
-    queryset = Room.objects.all()
-    serializer_class = RoomSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
-
-
-class RoomDetail(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, unique_link):
         try:
-            room = Room.objects.get(unique_link=unique_link)
+            uid = str(''.join(random.choices(string.ascii_letters + string.digits, k=4)))
+            room_slug = slugify(room_name + "_" + uid)
+            room = Room.objects.create(
+                name=room_name,
+                slug=room_slug,
+                is_private=is_private,
+                created_by=request.user
+            )
+
+            serializer = RoomSerializer(room)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"detail": "An error occurred during room creation"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def join_room(self, request):
+        provided_slug = request.data.get("room_slug")
+        try:
+            room = Room.objects.get(slug=provided_slug)
+        except Room.DoesNotExist:
+            messages.error(request, "Room does not exist!")
+            return HttpResponse(status=500)
+
+        correct_slug = room.slug  # Actual slug for the room
+
+        if provided_slug == correct_slug:
+            # The provided slug matches the actual slug, proceed to join the room
+            if not room.is_private or request.user in room.users.all():
+                return redirect('chat', room_slug=room.slug)
+            else:
+                messages.error(request, "Access denied, this is a private room!")
+                return HttpResponseForbidden("Access denied, this is a private room!")
+        else:
+            # The provided slug does not match the actual slug
+            messages.error(request, "Invalid passcode for the room!")
+            return HttpResponseBadRequest("Invalid passcode for the room!")
+
+
+class RoomDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def get(self, request, room_slug):
+        try:
+            room = Room.objects.get(slug=room_slug)
             if room.is_private and request.user not in room.users.all():
                 return Response({"detail": "You do not have access to this room."}, status=status.HTTP_403_FORBIDDEN)
             serializer = RoomSerializer(room)
             return Response(serializer.data)
         except Room.DoesNotExist:
             return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
-
-
-@login_required
-def room_create(request):
-    """
-    Creates a new chat room.
-
-    Args:
-        request: The HTTP request.
-
-    Returns:
-        A rendered HTML response, or a redirect to the new chat room.
-    """
-    if request.method == "POST":
-        room_name = request.POST.get("room_name")
-        is_private = request.POST.get("is_private") == "on"
-        if not room_name:
-            messages.error(request, "Room name is required!")
-            return redirect(reverse('create-room'))
-        try:
-            uid = str(''.join(random.choices(
-            string.ascii_letters + string.digits, k=4)))
-            room_slug = slugify(room_name + "_" + uid)
-            room = Room.objects.create(
-                name=room_name,
-                slug=room_slug,
-                is_private=is_private,
-                created_by=request.user)
-
-            if is_private:
-                return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
-            else:
-                return redirect(reverse('chat', kwargs={'unique_link': room.unique_link}))
-
-        except Exception as e:
-                messages.error(request, "An error occurred during room creation")
-                return redirect(reverse('create-room'))
-
-    return render(request, 'chat/create.html')
-
-
-@login_required
-def room_join(request):
-    """
-    Joins a chat room.
-
-    Args:
-        request: The HTTP request.
-
-    Returns:
-        A redirect to the chat room, or raises an error if the room does not exist or the 
-        user does not have permission to join it.
-    """
-    if request.method == "POST":
-        room_name = request.POST.get("room_name")
-        try:
-            room = Room.objects.get(slug=room_name)
-        except Room.DoesNotExist:
-            messages.error(request, "Room does not exist!")
-            return HttpResponse(status=500)
-
-        if not room.is_private or request.user in room.users.all():
-            return redirect(reverse('chat', kwargs={'slug': room.slug}))
-        else:
-            messages.error(request, "Access denied, this is a private room!")
-            return HttpResponseForbidden("Access denied, this is a private room!")
-
-    return HttpResponseBadRequest("Unable to join the room.")
 
   
 @api_view(["POST"])

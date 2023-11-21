@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "dj_rest_auth",
     "dj_rest_auth.registration",
     
-    "debug_toolbar"
+    # "debug_toolbar"
 
 ]
 
@@ -55,7 +55,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    # "debug_toolbar.middleware.DebugToolbarMiddleware",
     # Add the account middleware:
     # "allauth.account.middleware.AccountMiddleware",
 ]
@@ -187,12 +187,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 
-# JWT_AUTH = {
-#     'JWT_SECRET_KEY': 'whateverlol',
-#     'JWT_ALGORITHM': 'HS256',
-#     'JWT_ALLOW_REFRESH': True,    
-#     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
-# }
+
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
@@ -230,3 +225,4 @@ INTERNAL_IPS = [
 ]
 
 CSRF_COOKIE_SECURE = True
+APPEND_SLASH = False

@@ -109,13 +109,18 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 
 class RoomSerializer(serializers.ModelSerializer):
-    users = CustomUserSerializer(many=True)
-    created_by = CustomUserSerializer()
+    users = serializers.SerializerMethodField()
+    created_by = serializers.SerializerMethodField()
 
     class Meta:
         model = Room
         fields = "__all__"
 
+    def get_users(self, room):
+        return room.users.values_list('username', flat=True)
+
+    def get_created_by(self, room):
+        return room.created_by.username if room.created_by else None
 
 class UserNoteSerializer(serializers.Serializer):
     class Meta:
