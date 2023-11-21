@@ -9,7 +9,7 @@ urlpatterns = [
     path("room/", views.RoomCreateJoinView.as_view(), name='room-create-join'),
     # path('public-room/<slug:slug>/', views.public_chat, name='public-room'),
     # path('post_message/', views.post_message, name='post-message'),
-    path('room/<slug:slug>/tasks/', views.TaskListCreateView.as_view(), name='task-list'),
+    path('room/<str:room_slug>/tasks/', views.TaskListCreateView.as_view(), name='task-list'),
     path('room/tasks/<int:pk>/', views.TaskRetrieveUpdateDestroyView.as_view(), name='task-detail'),
     path('room/tasks/<int:pk>/comments/', views.CommentCreateView.as_view(), name='comment-create'),
     path('room/comments/<int:pk>/', views.CommentRetrieveUpdateDestroyView.as_view(), name='comment-detail'),
@@ -33,6 +33,6 @@ urlpatterns = [
     path('chat/download/<str:room_slug>/<int:file_id>/', views.file_download, name='file-download'),
     path('api/v1/chat/edit-uploaded-file/<int:file_id>', views.edit_uploaded_file, name='edit-uploaded-file'),
     path('chat/access-log/<int:file_id>/', views.file_access_log, name='file_access_log'),
-    path('api/chat/send/<slug:room_slug>/', views.send_message, name='send-message'), 
-    path('api/chat/get/<slug:room_slug>/', views.get_message, name='get-message'),
+    path('api/chat/send/<str:room_slug>/', views.send_message, name='send-message'), 
+    path('api/chat/get/<str:room_slug>/', views.get_message, name='get-message'),
 ]

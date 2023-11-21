@@ -222,7 +222,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        room = get_object_or_404(Room, slug=self.kwargs['slug'])
+        room = get_object_or_404(Room, slug=self.kwargs['room_slug'])
         serializer.save(room=room)
 
 
