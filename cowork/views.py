@@ -146,45 +146,23 @@ def send_message(request, room_slug):
         A JSON response with the status of the message send, or an error response if the request is invalid.
     """
     if request.method == "POST":
+        # Set room and user based on the request context
+        room = Room.objects.get(slug=room_slug)
+        user = request.user
+
+        # Include room and user in the request data
+        request.data["room"] = room.id
+        request.data["user"] = user.id
+
         serializer = SendMessageSerializer(data=request.data)
+
         if serializer.is_valid():
-            user = request.user
-            room = Room.objects.get(slug=room_slug)
-            media_file = request.data.get("media_file")
-            
-            if media_file:
-                media_msg = Message.objects.create(room=room, user=user, media=media_file)
-
-
-            message_text = serializer.validated_data.get("message_text")
-            
-            if message_text:
-                try:
-                    message = Message.objects.create(room=room, user=user, message=message_text)
-                    return Response({"status": "Message successfully sent!"}, status=status.HTTP_201_CREATED)
-                except Room.DoesNotExist:
-                    raise Http404("Room does not exist!")
-                except Exception as e:
-                    messages.error(f"Error occurred: {str(e)}")
-                    return HttpResponse(status=500)
-            
-
-            try:
-                room = Room.objects.get(slug=room_slug)
-                message = Message.objects.create(
-                    room=room, user=user, message=message_text)
-                return Response({"status": "Message successfully sent!"}, status=status.HTTP_201_CREATED)
-            except Room.DoesNotExist:
-                raise Http404("Room does not exist!")
-            except Exception as e:
-                messages.error(f"Error occurred: {str(e)}")
-                return HttpResponse(status=500)
-
+            serializer.save()
+            return Response({"status": "Message successfully sent!"}, status=status.HTTP_201_CREATED)
 
         return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({"error": "Invalid request method."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
