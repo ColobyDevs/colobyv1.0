@@ -31,8 +31,8 @@ urlpatterns = [
     path('api/branches/<int:pk>/', views.BranchDetail.as_view(), name='branch-detail'),
     
     path('chat/download/<str:room_slug>/<int:file_id>/', views.file_download, name='file-download'),
-    path('api/v1/chat/edit-uploaded-file/<int:file_id>', views.edit_uploaded_file, name='edit-uploaded-file'),
+    path('chat/edit-uploaded-file/<int:file_id>', views.edit_uploaded_file, name='edit-uploaded-file'),
     path('chat/access-log/<int:file_id>/', views.file_access_log, name='file_access_log'),
-    path('api/chat/send/<str:room_slug>/', views.send_message, name='send-message'), 
-    path('api/chat/get/<str:room_slug>/', views.get_message, name='get-message'),
+    path('chat/send/<str:room_slug>/', views.send_message, name='send-message'), 
+    path('chat/get/<str:room_slug>/', views.get_message, name='get-message'),
 ]
