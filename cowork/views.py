@@ -75,6 +75,7 @@ class RoomCreateJoinView(APIView):
 
     def create_room(self, request):
         room_name = request.data.get("room_name")
+        description = request.data.get("description")
         is_private = request.data.get("is_private", False)
 
         if not room_name:
@@ -86,6 +87,7 @@ class RoomCreateJoinView(APIView):
             room = Room.objects.create(
                 name=room_name,
                 slug=room_slug,
+                description = description,
                 is_private=is_private,
                 created_by=request.user
             )
@@ -133,6 +135,23 @@ class RoomDetailView(APIView):
             return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
 
   
+
+# class UserRoomsView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def get(self, request):
+#         user = request.user
+#         created_rooms = user.get_created_rooms()
+#         joined_rooms = user.get_joined_rooms()
+
+#         # Now, you have the rooms created and joined by the user
+#         data = {
+#             'created_rooms': created_rooms.values(),  
+#             'joined_rooms': joined_rooms.values(),    
+#         }
+
+#         return Response(data, status=status.HTTP_200_OK)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def send_message(request, room_slug):

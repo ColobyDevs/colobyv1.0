@@ -14,6 +14,7 @@ urlpatterns = [
     path('room/tasks/<int:pk>/comments/', views.CommentCreateView.as_view(), name='comment-create'),
     path('room/comments/<int:pk>/', views.CommentRetrieveUpdateDestroyView.as_view(), name='comment-detail'),
     path('room/like/<str:room_slug>/', views.like_room, name='like-room'),
+    # path('room/count/', views.UserRoomsView.as_view(), name='user_rooms'),
 
     # usernote endpoints (To F.Es the feature requires autosave 😉)
     path('user/notes/', views.UserNoteCreateView.as_view(), name='usernote-list-create'),

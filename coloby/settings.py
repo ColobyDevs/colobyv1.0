@@ -42,6 +42,10 @@ INSTALLED_APPS = [
  
     "dj_rest_auth",
     "dj_rest_auth.registration",
+
+    #Notifications
+    'notifications',
+    'notifications_rest',
     
     # "debug_toolbar"
 

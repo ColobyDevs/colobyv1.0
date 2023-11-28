@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 
+
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager where email is the unique identifiers
@@ -48,3 +49,9 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+    
+    # def get_created_rooms(self):
+    #     return self.created_rooms.all()
+
+    # def get_joined_rooms(self):
+    #     return self.rooms.all()

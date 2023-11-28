@@ -63,6 +63,7 @@ class Room(BaseModel):
     is_private = models.BooleanField(default=False)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="created_rooms", null=True, blank=True)
     likes = models.ManyToManyField(CustomUser, related_name="liked_rooms", blank=True)
+    description = models.CharField(max_length=300,blank=True, null=True)
     
     def save(self, *args, **kwargs):
         if not self.unique_link or Room.objects.filter(unique_link=self.unique_link).exists():
@@ -73,6 +74,7 @@ class Room(BaseModel):
 
     def __str__(self):
         return self.name
+
 
 
 class Message(BaseModel):

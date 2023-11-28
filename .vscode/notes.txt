@@ -1,0 +1,2 @@
+Display room slugs that user is a member of.
+Cre
