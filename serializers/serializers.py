@@ -45,33 +45,32 @@ class SignInSerializer(serializers.Serializer):
         """
         This is for validating credentiials for signing in
         """
-        error_messages = {
-            "error-mssg-1": {
-                "error": "user doesn't exist"
-            },
-             "error-mssg-2": {
-                "credential_error": "Please recheck the credentials provided."
-            },
-        }
 
         user = User.objects.filter(email=attrs["email"]).first()
         if (user is None):
-            raise serializers.ValidationError(error_messages["error-mssg-1"])
+            raise serializers.ValidationError({
+                "sucess": "false",
+                "message": "user doesn't exist"
+            })
     
         elif (user and user.check_password(attrs["password"])):
             return user
         
         else:
-            raise serializers.ValidationError(error_messages['error-mssg-2'])
+            raise serializers.ValidationError({
+                "sucess": "false",
+                "message": "Invalid credentials"
+            })
 
     
     def to_representation(self, instance):
         user = User.objects.get(email=instance.email)
         refresh = RefreshToken.for_user(instance)
         return {
+            "success": ["true"],
             "refresh_token":str(refresh), 
             "access_token": str(refresh.access_token),
-	    "user_id": user.id
+	        "user_id": user.id
             }
 
 
