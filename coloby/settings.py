@@ -4,15 +4,18 @@ import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+from decouple import config
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-q8$1^k7t36@2_o#ddypqs2xn(0vsn07y6g@ynj_gq9zzo$_)2)"
+SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ["*"]
+
+ALLOWED_HOSTS = config("ALLOWED_HOSTS").split(" ")
+
 
 INSTALLED_APPS = [
     "daphne",
@@ -31,6 +34,7 @@ INSTALLED_APPS = [
     # "commands",
     "rest_framework",
     "rest_framework.authtoken",
+    'corsheaders',
     # Documentation with Swagger
     'rest_framework_swagger',
     'drf_yasg',
@@ -59,7 +63,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # "debug_toolbar.middleware.DebugToolbarMiddleware",
+
+    "corsheaders.middleware.CorsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+
     # Add the account middleware:
     # "allauth.account.middleware.AccountMiddleware",
 ]
@@ -105,7 +112,12 @@ DATABASES = {
     }
 } 
 
-DATABASES["default"] = dj_database_url.parse("postgres://coloby_yib8_user:AWZ1xsGm6YCkPsFrVe5NOwQidYXZeixB@dpg-cmevc1ed3nmc739cs5gg-a.oregon-postgres.render.com/coloby_yib8")
+
+
+database_url = config("DATABASE_URL")
+DATABASES["default"] = dj_database_url.parse(database_url)
+
+
 
 # AUTH_PASSWORD_VALIDATORS = [
 #     {
@@ -131,13 +143,12 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = "static/"
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-    #  os.path.join(BASE_DIR, "frontend/build/static"),
-]
-
+STATIC_URL = '/static/'
+if DEBUG:
+  STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+else:
+  STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
@@ -232,12 +243,21 @@ SOCIALACCOUNT_PROVIDERS = {
 
 
 
+
+CORS_ORIGIN_ALLOW_ALL = config('CORS_ORIGIN_ALLOW_ALL', default=False, cast=bool)
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in config('CORS_ALLOWED_ORIGINS').split(',')]
+CORS_ALLOW_METHODS = [method.strip() for method in config('CORS_ALLOW_METHODS').split(',')]
+CORS_ALLOW_HEADERS = [header.strip() for header in config('CORS_ALLOW_HEADERS').split(',')]
+
 # DEBUG_TOOLBAR_SETTINGS
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-    "localhost",
-]
+# INTERNAL_IPS = [
+#     "127.0.0.1",
+#     "localhost",
+#     "coloby.onrender.com"
+# ]
 
 CSRF_COOKIE_SECURE = True
+
 APPEND_SLASH = False
+
