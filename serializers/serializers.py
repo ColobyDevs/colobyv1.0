@@ -162,9 +162,28 @@ class ReceiveMessageSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    assigned_to = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=CustomUser.objects.all(),
+    )
+    due_date = serializers.DateField(format='%Y-%m-%d') 
+
     class Meta:
         model = Task
         fields = '__all__'
+        read_only_fields = ['room']
+
+    def validate_assigned_to(self, value):
+        # Access the room and creator from the context
+        room = self.context['room']
+        creator = room.created_by
+
+        # Check if the assigned user is a member of the room (excluding the creator)
+        if not (room.users.filter(id=value.id).exists() or value == creator):
+            raise serializers.ValidationError("The assigned user must be a member of the room or the room creator.")
+
+        return value
+
 
 
 class CommentSerializer(serializers.ModelSerializer):
