@@ -75,6 +75,7 @@ class RoomCreateJoinView(APIView):
 
     def create_room(self, request):
         room_name = request.data.get("room_name")
+        description = request.data.get("description")
         is_private = request.data.get("is_private", False)
 
         if not room_name:
@@ -86,6 +87,7 @@ class RoomCreateJoinView(APIView):
             room = Room.objects.create(
                 name=room_name,
                 slug=room_slug,
+                description = description,
                 is_private=is_private,
                 created_by=request.user
             )
@@ -101,23 +103,24 @@ class RoomCreateJoinView(APIView):
         try:
             room = Room.objects.get(slug=provided_slug)
         except Room.DoesNotExist:
-            messages.error(request, "Room does not exist!")
-            return HttpResponse(status=500)
+            return Response({"detail": "Room does not exist!"}, status=status.HTTP_404_NOT_FOUND)
 
         correct_slug = room.slug  # Actual slug for the room
 
         if provided_slug == correct_slug:
             # The provided slug matches the actual slug, proceed to join the room
             if not room.is_private or request.user in room.users.all():
-                return redirect('chat', room_slug=room.slug)
+                # Add the user to the room's users
+                room.users.add(request.user)
+
+                
+
+                return Response({"detail": "Successfully joined the room."}, status=status.HTTP_200_OK)
             else:
-                messages.error(request, "Access denied, this is a private room!")
-                return HttpResponseForbidden("Access denied, this is a private room!")
+                return Response({"detail": "Access denied, this is a private room!"}, status=status.HTTP_403_FORBIDDEN)
         else:
             # The provided slug does not match the actual slug
-            messages.error(request, "Invalid passcode for the room!")
-            return HttpResponseBadRequest("Invalid passcode for the room!")
-
+            return Response({"detail": "Invalid passcode for the room!"}, status=status.HTTP_400_BAD_REQUEST)
 
 class RoomDetailView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
@@ -133,6 +136,23 @@ class RoomDetailView(APIView):
             return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
 
   
+
+# class UserRoomsView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def get(self, request):
+#         user = request.user
+#         created_rooms = user.get_created_rooms()
+#         joined_rooms = user.get_joined_rooms()
+
+#         # Now, you have the rooms created and joined by the user
+#         data = {
+#             'created_rooms': created_rooms.values(),  
+#             'joined_rooms': joined_rooms.values(),    
+#         }
+
+#         return Response(data, status=status.HTTP_200_OK)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def send_message(request, room_slug):
@@ -202,6 +222,11 @@ class TaskListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         room = get_object_or_404(Room, slug=self.kwargs['room_slug'])
         serializer.save(room=room)
+    def get_serializer_context(self):
+        # Pass the room to the serializer context
+        context = super().get_serializer_context()
+        context['room'] = get_object_or_404(Room, slug=self.kwargs['room_slug'])
+        return context
 
 
 class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):

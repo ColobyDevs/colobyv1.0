@@ -3,11 +3,13 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
-from .models import Room, UploadedFile, Message
+from .models import Room, UploadedFile, Message, Task
+from serializers.serializers import TaskSerializer 
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.conf import settings
+from datetime import timezone, datetime
 import tempfile
 import shutil
 
@@ -176,6 +178,95 @@ class RoomAPITests(TestCase):
         self.assertTrue(created_room.unique_link)
 
 
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="media"))
+class TaskAPITests(TestCase):
+    """Tests for Task API."""
+    def setUp(self):
+        """Setup test user, room, tasks, and authenticated client."""
+        self.user = User.objects.create_user(username='testuser', password='testpassword', email='testuser@example.com')
+
+        self.room = Room.objects.create(name='Test Room', slug='test-room')
+
+        current_time = datetime.now(timezone.utc)
+
+        self.task1 = Task.objects.create(title='Task 1', room=self.room, due_date=datetime(
+        current_time.year,
+        current_time.month,
+        current_time.day,
+        current_time.hour,
+        current_time.minute,
+        current_time.second,
+        current_time.microsecond,
+        ).astimezone(timezone.utc), assigned_to=self.user,)
+        self.task2 = Task.objects.create(title='Task 2', room=self.room, due_date=datetime(
+        current_time.year,
+        current_time.month,
+        current_time.day,
+        current_time.hour,
+        current_time.minute,
+        current_time.second,
+        current_time.microsecond,
+        ).astimezone(timezone.utc), assigned_to=self.user,)
+
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+    
+    def test_task_list_create_view(self):
+        """
+        Tests that calling the API endpoint for creating new tasks:
+
+        - Sends a POST request to the correct URL with appropriate data.
+        - Returns a created status code (201).
+        - Creates and saves the new task in the database.
+        """
+        url = reverse('task-list', kwargs={'slug': self.room.slug})
+
+        data = {'title': 'New Task',
+                'description': 'Task description',  
+                'due_date': '2023-12-21T12:00:00Z', 
+                'room': self.room.id,  
+                'assigned_to': self.user.id, }
+
+        response = self.client.post(url, data, format='json')
+        print(response.content)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(Task.objects.count(), 3)
+
+    # def test_task_detail(self):
+    #     """
+    #     Tests that the API endpoint for managing individual tasks:
+
+    #     - Retrieves the existing task information with a GET request.
+    #     - Updates the task title with a PUT request (200 status code).
+    #     - Verifies the updated title in the database.
+    #     - Deletes the task with a DELETE request (204 status code).
+    #     - Confirms only one task remains in the database.
+    #     """
+    #     url = reverse('task-detail', kwargs={'pk': self.task1.pk})
+
+    #     response = self.client.get(url)
+    #     print(response.content)
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    #     updated_data = {'title': 'Updated Task',
+    #                     'description': 'Task description',  
+    #                     'due_date': '2023-12-21T12:00:00Z', 
+    #                     'room': self.room.id,  
+    #                     'assigned_to': self.user.id,}
+    #     response = self.client.put(url, updated_data, format='json')
+    #     print(response.content)
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    #     self.task1.refresh_from_db()
+    #     self.assertEqual(self.task1.title, 'Updated Task')
+
+    #     print("Task count before deletion:", Task.objects.count())
+    #     response = self.client.delete(url)
+    #     print("Task count after deletion:", Task.objects.count())
+    #     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    #     self.assertEqual(Task.objects.count(), 1)
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="media"))
 class FileAPITests(TestCase):

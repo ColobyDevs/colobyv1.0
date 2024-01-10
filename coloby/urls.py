@@ -25,8 +25,11 @@ urlpatterns = [
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0),name='schema-swagger-ui'),
     path("accounts/", include("allauth.urls")),
 
+    # Notifications
+    path('^notifications/', include('notifications_rest.urls')),
+
     # DEBUG_TOOL_BAR
-    path("__debug__/", include("debug_toolbar.urls")),
+    # path("__debug__/", include("debug_toolbar.urls")),
         
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0),name='schema-swagger-ui'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

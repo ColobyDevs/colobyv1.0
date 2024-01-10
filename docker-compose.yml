@@ -1,8 +1,30 @@
-version: "3.9"
+version: '3'
 
 services:
- django:
-    image: django-coloby:0.0.1
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: mydatabaseuser
+      POSTGRES_PASSWORD: mypassword
+
+  web:
     build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
     ports:
-         - 8000:8000
+      - "8000:8000"
+    depends_on:
+      - db
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_LISTEN_PORT: 5432
+    ports:
+      - "5432:5432"
+    depends_on:
+      - db

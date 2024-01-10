@@ -46,6 +46,10 @@ INSTALLED_APPS = [
  
     "dj_rest_auth",
     "dj_rest_auth.registration",
+
+    #Notifications
+    'notifications',
+    'notifications_rest',
     
     # "debug_toolbar"
 
@@ -59,8 +63,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
     "corsheaders.middleware.CorsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+
     # Add the account middleware:
     # "allauth.account.middleware.AccountMiddleware",
 ]
@@ -88,16 +94,29 @@ TEMPLATES = [
 WSGI_APPLICATION = "coloby.wsgi.application"
 ASGI_APPLICATION = "coloby.asgi.application"
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mydatabase',
+        'USER': 'mydatabaseuser',
+        'PASSWORD': 'mypassword',
+        'HOST': 'db',
+        'PORT': '5432',
     }
-}
+} 
+
 
 
 database_url = config("DATABASE_URL")
 DATABASES["default"] = dj_database_url.parse(database_url)
+
 
 
 # AUTH_PASSWORD_VALIDATORS = [
@@ -194,12 +213,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 
-# JWT_AUTH = {
-#     'JWT_SECRET_KEY': 'whateverlol',
-#     'JWT_ALGORITHM': 'HS256',
-#     'JWT_ALLOW_REFRESH': True,    
-#     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
-# }
+
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
@@ -244,3 +258,6 @@ CORS_ALLOW_HEADERS = [header.strip() for header in config('CORS_ALLOW_HEADERS').
 # ]
 
 CSRF_COOKIE_SECURE = True
+
+APPEND_SLASH = False
+

@@ -45,33 +45,32 @@ class SignInSerializer(serializers.Serializer):
         """
         This is for validating credentiials for signing in
         """
-        error_messages = {
-            "error-mssg-1": {
-                "error": "user doesn't exist"
-            },
-             "error-mssg-2": {
-                "credential_error": "Please recheck the credentials provided."
-            },
-        }
 
         user = User.objects.filter(email=attrs["email"]).first()
         if (user is None):
-            raise serializers.ValidationError(error_messages["error-mssg-1"])
+            raise serializers.ValidationError({
+                "sucess": "false",
+                "message": "user doesn't exist"
+            })
     
         elif (user and user.check_password(attrs["password"])):
             return user
         
         else:
-            raise serializers.ValidationError(error_messages['error-mssg-2'])
+            raise serializers.ValidationError({
+                "sucess": "false",
+                "message": "Invalid credentials"
+            })
 
     
     def to_representation(self, instance):
         user = User.objects.get(email=instance.email)
         refresh = RefreshToken.for_user(instance)
         return {
+            "success": ["true"],
             "refresh_token":str(refresh), 
             "access_token": str(refresh.access_token),
-	    "user_id": user.id
+	        "user_id": user.id
             }
 
 
@@ -162,9 +161,28 @@ class ReceiveMessageSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    assigned_to = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=CustomUser.objects.all(),
+    )
+    due_date = serializers.DateField(format='%Y-%m-%d') 
+
     class Meta:
         model = Task
         fields = '__all__'
+        read_only_fields = ['room']
+
+    def validate_assigned_to(self, value):
+        # Access the room and creator from the context
+        room = self.context['room']
+        creator = room.created_by
+
+        # Check if the assigned user is a member of the room (excluding the creator)
+        if not (room.users.filter(id=value.id).exists() or value == creator):
+            raise serializers.ValidationError("The assigned user must be a member of the room or the room creator.")
+
+        return value
+
 
 
 class CommentSerializer(serializers.ModelSerializer):
