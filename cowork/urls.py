@@ -5,7 +5,7 @@ from cowork import views
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="base.html"), name='index'),
-    path("chat/room/<str:room_slug>/", views.RoomDetailView.as_view(), name='chat'),
+    path("room/<str:room_slug>/", views.RoomDetailView.as_view(), name='chat'),
     path("room/", views.RoomCreateJoinView.as_view(), name='room-create-join'),
     # path('public-room/<slug:slug>/', views.public_chat, name='public-room'),
     # path('post_message/', views.post_message, name='post-message'),
@@ -34,6 +34,6 @@ urlpatterns = [
     path('chat/download/<str:room_slug>/<int:file_id>/', views.file_download, name='file-download'),
     path('chat/edit-uploaded-file/<int:file_id>', views.edit_uploaded_file, name='edit-uploaded-file'),
     path('chat/access-log/<int:file_id>/', views.file_access_log, name='file_access_log'),
-    path('chat/send/<str:room_slug>/', views.send_message, name='send-message'), 
-    path('chat/get/<str:room_slug>/', views.get_message, name='get-message'),
+    path('room/send/<str:room_slug>/', views.send_message, name='send-message'), 
+    path('room/get/<str:room_slug>/', views.get_message, name='get-message'),
 ]

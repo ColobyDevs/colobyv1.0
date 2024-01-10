@@ -87,14 +87,25 @@ TEMPLATES = [
 WSGI_APPLICATION = "coloby.wsgi.application"
 ASGI_APPLICATION = "coloby.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
-DATABASES["default"] = dj_database_url.parse("postgres://coloby_user:Cr2n8ZKORRuBWymCCWK7YUyiJ8QP8UxA@dpg-ckvflv3amefc7385l0h0-a.oregon-postgres.render.com/coloby")
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mydatabase',
+        'USER': 'mydatabaseuser',
+        'PASSWORD': 'mypassword',
+        'HOST': 'db',
+        'PORT': '5432',
+    }
+} 
+
+DATABASES["default"] = dj_database_url.parse("postgres://coloby_yib8_user:AWZ1xsGm6YCkPsFrVe5NOwQidYXZeixB@dpg-cmevc1ed3nmc739cs5gg-a.oregon-postgres.render.com/coloby_yib8")
 
 # AUTH_PASSWORD_VALIDATORS = [
 #     {

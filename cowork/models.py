@@ -61,10 +61,17 @@ class Room(BaseModel):
     slug = models.SlugField(unique=True)
     users = models.ManyToManyField(CustomUser)
     is_private = models.BooleanField(default=False)
-    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="created_rooms", null=True, blank=True)
+    created_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="created_rooms",
+        null=True,
+        blank=True,
+        db_column='created_by'  # Set the db_column parameter
+    )
     likes = models.ManyToManyField(CustomUser, related_name="liked_rooms", blank=True)
-    description = models.CharField(max_length=300,blank=True, null=True)
-    
+    description = models.CharField(max_length=300, blank=True, null=True)
+
     def save(self, *args, **kwargs):
         if not self.unique_link or Room.objects.filter(unique_link=self.unique_link).exists():
             self.unique_link = uuid.uuid4().hex[:50]
@@ -74,6 +81,7 @@ class Room(BaseModel):
 
     def __str__(self):
         return self.name
+
 
 
 
@@ -112,7 +120,7 @@ class Task(BaseModel):
     title = models.CharField(max_length=100)
     description = models.TextField()
     completed = models.BooleanField(default=False)
-    due_date = models.DateTimeField()
+    due_date = models.DateField()
     assigned_to = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 

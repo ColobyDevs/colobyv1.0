@@ -1,25 +1,19 @@
-# Use the official Python image from Docker Hub
-FROM python:3.10
+FROM python:3.8-alpine
 
-ENV PYTHONBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Set the working directory inside the container
+RUN apk update \
+    && apk add --virtual build-deps gcc python3-dev musl-dev \
+    && apk add postgresql-dev
+
 WORKDIR /app
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+COPY ./requirements.txt /app/requirements.txt
 
-# Install project dependencies
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
-# Copy the entire project into the container
-COPY . .
+COPY . /app
 
-# Expose the port your application will run on (change as needed)
-EXPOSE 8000
-
-
-# Define the command to run your application
-CMD ["python3", "manage.py", "runserver"]
-
-
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

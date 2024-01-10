@@ -103,23 +103,24 @@ class RoomCreateJoinView(APIView):
         try:
             room = Room.objects.get(slug=provided_slug)
         except Room.DoesNotExist:
-            messages.error(request, "Room does not exist!")
-            return HttpResponse(status=500)
+            return Response({"detail": "Room does not exist!"}, status=status.HTTP_404_NOT_FOUND)
 
         correct_slug = room.slug  # Actual slug for the room
 
         if provided_slug == correct_slug:
             # The provided slug matches the actual slug, proceed to join the room
             if not room.is_private or request.user in room.users.all():
-                return redirect('chat', room_slug=room.slug)
+                # Add the user to the room's users
+                room.users.add(request.user)
+
+                
+
+                return Response({"detail": "Successfully joined the room."}, status=status.HTTP_200_OK)
             else:
-                messages.error(request, "Access denied, this is a private room!")
-                return HttpResponseForbidden("Access denied, this is a private room!")
+                return Response({"detail": "Access denied, this is a private room!"}, status=status.HTTP_403_FORBIDDEN)
         else:
             # The provided slug does not match the actual slug
-            messages.error(request, "Invalid passcode for the room!")
-            return HttpResponseBadRequest("Invalid passcode for the room!")
-
+            return Response({"detail": "Invalid passcode for the room!"}, status=status.HTTP_400_BAD_REQUEST)
 
 class RoomDetailView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
@@ -221,6 +222,11 @@ class TaskListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         room = get_object_or_404(Room, slug=self.kwargs['room_slug'])
         serializer.save(room=room)
+    def get_serializer_context(self):
+        # Pass the room to the serializer context
+        context = super().get_serializer_context()
+        context['room'] = get_object_or_404(Room, slug=self.kwargs['room_slug'])
+        return context
 
 
 class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
