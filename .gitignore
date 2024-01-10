@@ -26,3 +26,9 @@ build/
 colup.egg-info/
 
 .env
+
+
+static/
+
+
+staticfiles/
