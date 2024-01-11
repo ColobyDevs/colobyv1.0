@@ -7,7 +7,7 @@ from django.contrib.auth.hashers import check_password
 from cowork.models import (
     Room, Task, Comment,
     Message, UploadedFile,
-    Branch, UserNote, FeatureRequest)
+    Branch, UserNote, FeatureRequest, Commit, UploadedFileVersion)
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
@@ -190,7 +190,6 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
-
 class UploadedFileSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="uploaded_by.username")
     access_permissions = serializers.StringRelatedField(many=True)
@@ -201,11 +200,23 @@ class UploadedFileSerializer(serializers.ModelSerializer):
                   "access_permissions", "file_size"]
 
 
+
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
         fields = ['original_file', 'content', 'description']
 
+
+        
+class UploadedFileVersionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UploadedFileVersion
+        fields = ["file", "description", "file_size"]
+
+class CommitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Commit
+        fields = ['uploader', 'timestamp', 'description']
 
 class UpdateUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
