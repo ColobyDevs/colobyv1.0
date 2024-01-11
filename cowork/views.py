@@ -1,5 +1,15 @@
-from rest_framework import status
-from rest_framework import generics, permissions, status, viewsets
+import string
+import random
+import mimetypes
+from serializers.serializers import UploadedFileSerializer, BranchSerializer, UploadedFileVersionSerializer, CommitSerializer
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render, reverse, redirect, get_object_or_404
+from django.utils.text import slugify
+from django.utils.decorators import method_decorator
+from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.urls import reverse
+from django.contrib import messages
+from rest_framework import status, generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -10,29 +20,21 @@ from serializers.serializers import (
     TaskSerializer, CommentSerializer,
     SendMessageSerializer, ReceiveMessageSerializer,
     RoomSerializer,
-    BranchSerializer, UserNoteSerializer,
+    # BranchSerializer,
+    UserNoteSerializer,
     FeatureRequestSerializer,
-    UploadedFileSerializer
+    # UploadedFileSerializer,
+    Commit, UploadedFileVersion
 
 )
 from .models import (Task, Comment, Room, Message,
                      UploadedFile,
-                     FileAccessLog, Branch,
+                     #  FileAccessLog,
+                     Branch,
                      UserNote, FeatureRequest
                      )
 
 
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.shortcuts import render, reverse, redirect, get_object_or_404
-from django.utils.text import slugify
-from django.utils.decorators import method_decorator
-from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden
-from django.urls import reverse
-from .forms import TaskForm, CommentForm, UploadedFileForm, BranchForm
-import string
-import random
-import mimetypes
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -48,17 +50,17 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # Write permissions are only allowed to the owner of the object.
         return obj.owner == request.user
 
-# private room
 
 
-@login_required
-def index(request, slug):
-    room = Room.objects.get(slug=slug)
-    messages = Message.objects.filter(room=room).order_by('created_at')
-    # public_projects = Room.objects.filter(is_private=False)
-    tasks = Task.objects.filter(room=room)
 
-    return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks})
+# @login_required
+# def index(request, slug):
+#     room = Room.objects.get(slug=slug)
+#     messages = Message.objects.filter(room=room).order_by('created_at')
+#     # public_projects = Room.objects.filter(is_private=False)
+#     tasks = Task.objects.filter(room=room)
+
+#     return render(request, 'chat/room.html', {'name': room.name, 'messages': messages, 'slug': room.slug, 'tasks': tasks})
 
 
 class RoomCreateJoinView(APIView):
@@ -82,12 +84,13 @@ class RoomCreateJoinView(APIView):
             return Response({"detail": "Room name is required!"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            uid = str(''.join(random.choices(string.ascii_letters + string.digits, k=4)))
+            uid = str(''.join(random.choices(
+                string.ascii_letters + string.digits, k=4)))
             room_slug = slugify(room_name + "_" + uid)
             room = Room.objects.create(
                 name=room_name,
                 slug=room_slug,
-                description = description,
+                description=description,
                 is_private=is_private,
                 created_by=request.user
             )
@@ -113,14 +116,13 @@ class RoomCreateJoinView(APIView):
                 # Add the user to the room's users
                 room.users.add(request.user)
 
-                
-
                 return Response({"detail": "Successfully joined the room."}, status=status.HTTP_200_OK)
             else:
                 return Response({"detail": "Access denied, this is a private room!"}, status=status.HTTP_403_FORBIDDEN)
         else:
             # The provided slug does not match the actual slug
             return Response({"detail": "Invalid passcode for the room!"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class RoomDetailView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
@@ -135,7 +137,6 @@ class RoomDetailView(APIView):
         except Room.DoesNotExist:
             return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
 
-  
 
 # class UserRoomsView(APIView):
 #     permission_classes = [IsAuthenticated]
@@ -146,8 +147,8 @@ class RoomDetailView(APIView):
 
 #         # Now, you have the rooms created and joined by the user
 #         data = {
-#             'created_rooms': created_rooms.values(),  
-#             'joined_rooms': joined_rooms.values(),    
+#             'created_rooms': created_rooms.values(),
+#             'joined_rooms': joined_rooms.values(),
 #         }
 
 #         return Response(data, status=status.HTTP_200_OK)
@@ -183,6 +184,7 @@ def send_message(request, room_slug):
         return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({"error": "Invalid request method."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -222,10 +224,12 @@ class TaskListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         room = get_object_or_404(Room, slug=self.kwargs['room_slug'])
         serializer.save(room=room)
+
     def get_serializer_context(self):
         # Pass the room to the serializer context
         context = super().get_serializer_context()
-        context['room'] = get_object_or_404(Room, slug=self.kwargs['room_slug'])
+        context['room'] = get_object_or_404(
+            Room, slug=self.kwargs['room_slug'])
         return context
 
 
@@ -300,182 +304,123 @@ def like_room(request, room_slug):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class IsUploaderOrReadOnly(permissions.BasePermission):
-    """
-    Custom permission class to only allow the uploader of the file to  make changes to said file.
-    """
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        return obj.uploaded_by == request.user
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def upload_file(request, room_slug):
-    """
-    Uploads a file to a chat room.
-
-    Args:
-        request: The HTTP request.
-        room_slug: The slug of the chat room.
-
-    Returns:
-        A JSON response with the status of the file upload, or an error response if the request is invalid.
-    """
-    if request.method == 'POST' and request.FILES.get('file'):
-        try:
-            uploaded_file = request.FILES['file']
-            description = request.POST.get('description', '')
-            room = get_object_or_404(Room, slug=room_slug)
-            uploaded_file_instance = UploadedFile.objects.create(
-                file=uploaded_file,
-                room=room,
-                uploaded_by=request.user,
-                description=description
-            )
-
-            # return redirect('file_list', room_slug=room_slug)
-            return Response({"status": "File uploaded successfully."}, status=status.HTTP_200_OK)
-
-        except Room.DoesNotExist:
-            raise Http404("Room does not exist!")
-        except Exception as e:
-            messages.error(f"Error occurred: {str(e)}")
-            return HttpResponse(status=500)
-
-    # return render(request, 'file_manager/upload_file.html')
-    return Response({"error": "Invalid request method!"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
 class UploadFileView(generics.CreateAPIView):
     queryset = UploadedFile.objects.all()
     serializer_class = UploadedFileSerializer
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [permissions.IsAuthenticated, IsUploaderOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user)
+        instance = serializer.save(uploaded_by=self.request.user)
+
+        # Get the room slug from the URL parameters
+        room_slug = self.kwargs.get('room_slug', None)
+
+        # Create initial commit for the master branch
+        room = get_object_or_404(Room, slug=room_slug)
+        master_branch = Branch.objects.get_or_create(
+            original_file=instance, created_by=self.request.user, room=room)[0]
+        commit = Commit.objects.create(
+            branch=master_branch,
+            uploader=self.request.user,
+            description="Initial commit"
+        )
+
+        # Create version for the master branch
+        UploadedFileVersion.objects.create(
+            uploaded_file=instance,
+            commit=commit,
+            file=instance.file,
+            description=instance.description,
+            file_size=instance.file_size
+        )
+
+
+class SwitchBranchView(APIView):
+    """
+    Switches to the specified branch.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, room_slug, file_id, branch_id):
+        try:
+            uploaded_file = get_object_or_404(
+                UploadedFile, id=file_id, room__slug=room_slug)
+            branch = get_object_or_404(
+                Branch, id=branch_id, original_file=uploaded_file)
+
+            # Implement logic to switch to the specified branch
+            # For example, you can update the UploadedFile instance to use the latest version from the branch
+            latest_version = UploadedFileVersion.objects.filter(
+                uploaded_file=uploaded_file, commit__branch=branch).latest('commit__timestamp')
+            uploaded_file.file = latest_version.file
+            uploaded_file.description = latest_version.description
+            uploaded_file.file_size = latest_version.file_size
+            uploaded_file.save()
+
+            return Response({"status": "Switched to branch successfully."}, status=status.HTTP_200_OK)
+
+        except UploadedFile.DoesNotExist:
+            raise Http404("File does not exist!")
+        except Branch.DoesNotExist:
+            raise Http404("Branch does not exist!")
+        except UploadedFileVersion.DoesNotExist:
+            raise Http404("File version not found!")
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class BranchList(generics.ListCreateAPIView):
-    queryset = Branch.objects.all()
     serializer_class = BranchSerializer
+
+    def get_queryset(self):
+        # Get the room slug from the URL parameters
+        room_slug = self.kwargs.get('room_slug', None)
+        return Branch.objects.filter(original_file__room__slug=room_slug)
 
 
 class BranchDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Branch.objects.all()
     serializer_class = BranchSerializer
 
-
-@method_decorator(login_required, name="dispatch")
-class FileListAPIView(APIView):
-    """
-    Lists all files in a chat room.
-
-    Args:
-        request: The HTTP request.
-        room_slug: The slug of the chat room.
-
-    Returns:
-        A JSON response with a list of files in the chat room, or an error response if the request is invalid.
-    """
-    renderer_classes = [JSONRenderer]
-
-    def get(self, request, room_slug):
-        try:
-            room = get_object_or_404(Room, slug=room_slug)
-            uploaded_files = UploadedFile.objects.filter(room=room)
-            serializer = UploadedFileSerializer(uploaded_files, many=True)
-            # return render(request, 'file_manager/file_list.html', {'room': room, 'uploaded_files': uploaded_files})
-            return Response({"status": "You are viewing files now", "files": serializer.data}, status=status.HTTP_200_OK)
-        except Room.DoesNotExist:
-            raise Http404("Room does not exist!")
-        except Exception as e:
-            messages.error(f"Error occurred: {str(e)}")
-            return HttpResponse(status=500)
+    def get_queryset(self):
+        # Get the room slug from the URL parameters
+        room_slug = self.kwargs.get('room_slug', None)
+        return Branch.objects.filter(original_file__room__slug=room_slug)
 
 
-@login_required
-def file_download(request, room_slug, file_id):
-    """
-    Downloads a file from a chat room.
+class UploadedFileVersionList(generics.ListAPIView):
+    serializer_class = UploadedFileVersionSerializer
 
-    Args:
-        request: The HTTP request.
-        room_slug: The slug of the chat room.
-        file_id: The ID of the file to download.
-
-    Returns:
-        A FileResponse object with the file content, or an error response if the request is invalid.
-    """
-    try:
-        room = get_object_or_404(Room, slug=room_slug)
-        upload_file = get_object_or_404(UploadedFile, id=file_id, room=room)
-        file_path = upload_file.file.path
-        content_type, _ = mimetypes.guess_type(file_path)
-
-        if upload_file.uploaded_by == request.user or request.user in room.users.all():
-            response = FileResponse(
-                open(file_path, 'rb'), content_type='application/octet-stream')
-            response['Content-Type'] = content_type
-            response['Content-Disposition'] = f'attachment; filename="{upload_file.file.name}"'
-            return response
-        else:
-            return HttpResponse("Access Denied!", status=403)
-
-    except Room.DoesNotExist:
-        raise Http404("Room does not exist!")
-    except UploadedFile.DoesNotExist:
-        raise Http404("File does not exist!")
-    except Exception as e:
-        messages.error(f"Error occurred: {str(e)}")
-        return HttpResponse(status=500)
+    def get_queryset(self):
+        # Get the room slug from the URL parameters
+        room_slug = self.kwargs.get('room_slug', None)
+        return UploadedFileVersion.objects.filter(uploaded_file__room__slug=room_slug)
 
 
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def edit_uploaded_file(request, file_id):
-    """
-    Edit an uploaded file.
+class UploadedFileVersionDetail(generics.RetrieveAPIView):
+    serializer_class = UploadedFileVersionSerializer
 
-    Args:
-        request: The HTTP request.
-        file_id: The ID of the uploaded file to edit.
-
-    Returns:
-        A redirect response to the file detail page IF the form is valid or
-        a render response to the edit uploaded file for invalid form.
-
-    """
-    try:
-        upload_file = get_object_or_404(UploadedFile, id=file_id)
-
-        # if request.user != upload_file.owner:
-        #     raise PermissionDenied()
-
-        if request.method == 'POST':
-            form = UploadedFileForm(request.POST, instance=upload_file)
-            if form.is_valid():
-                form.save()
-                # return redirect("file_detail", file_id=file_id)
-                return Response({"status": "File edited successfully"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"error": "Form data is invalid"}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            form = UploadedFileForm(instance=upload_file)
-            # return render(request, "file_manager/edit_uploaded_file.html", {"form": form, "upload_file": upload_file})
-            return Response({"status": "You are editing this file now"}, status=status.HTTP_200_OK)
-    except Exception as e:
-        # messages.error(f"Error occurred: {str(e)}")
-        # return HttpResponse(status=500)
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def get_queryset(self):
+        # Get the room slug from the URL parameters
+        room_slug = self.kwargs.get('room_slug', None)
+        return UploadedFileVersion.objects.filter(uploaded_file__room__slug=room_slug)
 
 
-@login_required
-def file_access_log(request, file_id):
-    uploaded_file = get_object_or_404(UploadedFile, id=file_id)
-    access_logs = FileAccessLog.objects.filter(file=uploaded_file)
-    return render(request, 'file_manager/file_access_log.html', {'uploaded_file': uploaded_file, 'access_logs': access_logs})
+class CommitList(generics.ListAPIView):
+    serializer_class = CommitSerializer
+
+    def get_queryset(self):
+        # Get the room slug from the URL parameters
+        room_slug = self.kwargs.get('room_slug', None)
+        return Commit.objects.filter(branch__original_file__room__slug=room_slug)
+
+
+class CommitDetail(generics.RetrieveAPIView):
+    serializer_class = CommitSerializer
+
+    def get_queryset(self):
+        # Get the room slug from the URL parameters
+        room_slug = self.kwargs.get('room_slug', None)
+        return Commit.objects.filter(branch__original_file__room__slug=room_slug)
+
+

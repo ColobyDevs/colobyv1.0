@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser
 from collections.abc import Iterable
 from django.db import models
 from django.db.models.query import QuerySet
@@ -15,20 +16,23 @@ from tinymce.models import HTMLField
 
 User = get_user_model()
 
+
 class SoftDeletionManager(models.Manager):
     """
     A custom manager for models that support soft deletion. This manager filters out
     objects that have a non-null deleted_at field.
     """
+
     def __init__(self, *args, **kwargs):
         super(SoftDeletionManager, self).__init__(*args, **kwargs)
 
     def get_queryself(self):
         return super(SoftDeletionManager, self).get_queryset().filter(deleted_at__isnull=True)
-    
+
     def with_deleted(self):
         return super(SoftDeletionManager, self).get_queryset()
-    
+
+
 class BaseModel(models.Model):
     """
     An abstract base model that includes the deleted_at field and the SoftDeletionManager.
@@ -55,9 +59,11 @@ class BaseModel(models.Model):
         self.deleted_at = None
         self.save()
 
+
 class Room(BaseModel):
     name = models.CharField(max_length=128)
-    unique_link = models.CharField(max_length=50, unique=True, default=uuid.uuid4().hex[:50])
+    unique_link = models.CharField(
+        max_length=50, unique=True, default=uuid.uuid4().hex[:50])
     slug = models.SlugField(unique=True)
     users = models.ManyToManyField(CustomUser)
     is_private = models.BooleanField(default=False)
@@ -69,7 +75,8 @@ class Room(BaseModel):
         blank=True,
         db_column='created_by'  # Set the db_column parameter
     )
-    likes = models.ManyToManyField(CustomUser, related_name="liked_rooms", blank=True)
+    likes = models.ManyToManyField(
+        CustomUser, related_name="liked_rooms", blank=True)
     description = models.CharField(max_length=300, blank=True, null=True)
 
     def save(self, *args, **kwargs):
@@ -83,8 +90,6 @@ class Room(BaseModel):
         return self.name
 
 
-
-
 class Message(BaseModel):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -96,6 +101,8 @@ class Message(BaseModel):
         return f"{self.room.name} - {self.user.username}: {self.message}"
 
 # A feature where users can create notes to pen ideas down
+
+
 class UserNote(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
@@ -106,6 +113,8 @@ class UserNote(models.Model):
         return self.title
 
 # Feature Request where room memebers can request a feature or something else
+
+
 class FeatureRequest(models.Model):
     description = models.TextField()
     votes = models.PositiveIntegerField(default=0)
@@ -126,7 +135,7 @@ class Task(BaseModel):
 
     def __str__(self):
         return self.title
-    
+
 
 class Comment(BaseModel):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
@@ -138,15 +147,19 @@ class Comment(BaseModel):
         return f"Comment by {self.user.username} on {self.task.title}"
 
 
+
+
 class UploadedFile(BaseModel):
     file = models.FileField(upload_to='uploads/')
-    object_id = models.PositiveIntegerField(null=True, blank=True, default=None)
+    object_id = models.PositiveIntegerField(
+        null=True, blank=True, default=None)
     content = HTMLField(default="<p>You put something here...</p>")
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)  # Add this foreign key to Room
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
-    access_permissions = models.ManyToManyField(CustomUser, related_name="accessible_files", blank=True)
+    access_permissions = models.ManyToManyField(
+        CustomUser, related_name="accessible_files", blank=True)
     file_size = models.PositiveIntegerField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
@@ -158,10 +171,9 @@ class UploadedFile(BaseModel):
         return self.file.name
 
 
-
 class Branch(BaseModel):
     original_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
-    created_by = models.ForeignKey(CustomUser, on_delete = models.CASCADE)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     content = HTMLField(default="<p>Your changes go here...</p>")
     description = models.TextField(blank=True)
@@ -169,10 +181,17 @@ class Branch(BaseModel):
     def __str__(self):
         return f"Branch of {self.original_file.file.name} by {self.created_by.username}"
 
-class FileAccessLog(BaseModel):
-    file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
-    accessed_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    accessed_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.accessed_by.username} accessed {self.file.name} at {self.accessed_at} in {self.room.name}"
+class Commit(BaseModel):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    uploader = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(blank=True)
+
+
+class UploadedFileVersion(BaseModel):
+    uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
+    commit = models.ForeignKey(Commit, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='uploads/versions/')
+    description = models.TextField(blank=True)
+    file_size = models.PositiveIntegerField(null=True, blank=True)
