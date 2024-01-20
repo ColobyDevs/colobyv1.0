@@ -94,7 +94,7 @@ DATABASES = {
     }
 }
 
-# DATABASES["default"] = dj_database_url.parse("postgres://coloby_user:Cr2n8ZKORRuBWymCCWK7YUyiJ8QP8UxA@dpg-ckvflv3amefc7385l0h0-a.oregon-postgres.render.com/coloby")
+DATABASES["default"] = dj_database_url.parse("postgres://coloby_user:Cr2n8ZKORRuBWymCCWK7YUyiJ8QP8UxA@dpg-ckvflv3amefc7385l0h0-a.oregon-postgres.render.com/coloby")
 
 # AUTH_PASSWORD_VALIDATORS = [
 #     {
