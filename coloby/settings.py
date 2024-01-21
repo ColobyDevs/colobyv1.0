@@ -48,8 +48,8 @@ INSTALLED_APPS = [
     "dj_rest_auth.registration",
 
     #Notifications
-    'notifications',
-    'notifications_rest',
+    # 'notifications',
+    # 'notifications_rest',
     
     # "debug_toolbar"
 
@@ -171,9 +171,9 @@ REST_FRAMEWORK = {
 # SIMPLEJWT SETTINGS
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=50),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-    "SLIDING_TOKEN_LIFETIME": timedelta(days=7),
+    "SLIDING_TOKEN_LIFETIME": timedelta(days=60),
     "SLIDING_TOKEN_REFRESH_LIFETIME_GRACE_PERIOD": timedelta(days=1),
     "SLIDING_TOKEN_REFRESH_LIFETIME_ALLOWANCE": timedelta(days=1),
     "SLIDING_TOKEN_REFRESH_AFTER_LIFETIME": timedelta(days=1),

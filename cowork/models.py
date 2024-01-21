@@ -39,7 +39,7 @@ class BaseModel(models.Model):
     This class will not be created as its own database table but will be inherited by other models
     via Meta class.
     """
-    deleted_at = models.DateTimeField(null=True, blank=True)
+    # deleted_at = models.DateTimeField(null=True, blank=True)
     objects = SoftDeletionManager()
 
     class Meta:
@@ -154,7 +154,7 @@ class UploadedFile(BaseModel):
     object_id = models.PositiveIntegerField(
         null=True, blank=True, default=None)
     content = HTMLField(default="<p>You put something here...</p>")
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="uploaded_files", default=None)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
@@ -173,6 +173,7 @@ class UploadedFile(BaseModel):
 
 class Branch(BaseModel):
     original_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="uploaded_files_branch", default=None)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     content = HTMLField(default="<p>Your changes go here...</p>")
@@ -191,6 +192,7 @@ class Commit(BaseModel):
 
 class UploadedFileVersion(BaseModel):
     uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="uploaded_files_version", default=None)
     commit = models.ForeignKey(Commit, on_delete=models.CASCADE)
     file = models.FileField(upload_to='uploads/versions/')
     description = models.TextField(blank=True)

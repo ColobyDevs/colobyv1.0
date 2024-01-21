@@ -311,29 +311,43 @@ class UploadFileView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        instance = serializer.save(uploaded_by=self.request.user)
-
         # Get the room slug from the URL parameters
         room_slug = self.kwargs.get('room_slug', None)
 
-        # Create initial commit for the master branch
+        # Get the room instance
         room = get_object_or_404(Room, slug=room_slug)
-        master_branch = Branch.objects.get_or_create(
-            original_file=instance, created_by=self.request.user, room=room)[0]
+
+        # Associate the room with the UploadedFile instance
+        serializer.validated_data['room'] = room
+
+        # Save the UploadedFile instance
+        uploaded_file_instance = serializer.save(uploaded_by=self.request.user)
+
+        # Create initial commit for the master branch
+        master_branch, created = Branch.objects.get_or_create(
+            original_file=uploaded_file_instance,
+            created_by=self.request.user,
+            room=room  
+        )
+
+
+        # Create a commit for the uploaded file
         commit = Commit.objects.create(
             branch=master_branch,
             uploader=self.request.user,
             description="Initial commit"
         )
 
-        # Create version for the master branch
+        # Create a version for the master branch
         UploadedFileVersion.objects.create(
-            uploaded_file=instance,
+            uploaded_file=uploaded_file_instance,
             commit=commit,
-            file=instance.file,
-            description=instance.description,
-            file_size=instance.file_size
+            file=uploaded_file_instance.file,
+            description=uploaded_file_instance.description,
+            file_size=uploaded_file_instance.file_size
         )
+
+
 
 
 class SwitchBranchView(APIView):

@@ -197,7 +197,8 @@ class UploadedFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UploadedFile
         fields = ["file", "description", "owner",
-                  "access_permissions", "file_size"]
+                  "access_permissions", "file_size", "room_id"]
+        read_only_fields = ['room']
 
 
 

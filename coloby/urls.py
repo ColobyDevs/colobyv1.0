@@ -26,7 +26,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
 
     # Notifications
-    path('^notifications/', include('notifications_rest.urls')),
+    # path('^notifications/', include('notifications_rest.urls')),
 
     # DEBUG_TOOL_BAR
     # path("__debug__/", include("debug_toolbar.urls")),
