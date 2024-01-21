@@ -21,6 +21,11 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 User = get_user_model()
 
 class UserRegistrationView(generics.CreateAPIView):
