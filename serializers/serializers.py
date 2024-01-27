@@ -120,6 +120,15 @@ class RoomSerializer(serializers.ModelSerializer):
 
     def get_created_by(self, room):
         return room.created_by.username if room.created_by else None
+    
+    def remove_user(self, room, user):
+        if user in room.users.all():
+            room.users.remove(user)
+            return {"detail": f"User {user.username} removed from the room."}
+        else:
+            return {"detail": f"User {user.username} is not in the room."}
+        
+
 
 class UserNoteSerializer(serializers.Serializer):
     class Meta:

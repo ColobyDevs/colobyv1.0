@@ -122,6 +122,20 @@ class RoomCreateJoinView(APIView):
         else:
             # The provided slug does not match the actual slug
             return Response({"detail": "Invalid passcode for the room!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        def delete_room(self, request):
+            room_slug = request.data.get("room_slug")
+            try:
+                room = Room.objects.get(slug=room_slug)
+            except Room.DoesNotExist:
+                return Response({"detail": "Room does not exist!"}, status=status.HTTP_404_NOT_FOUND)
+
+            if room.created_by == request.user:
+                room.delete()
+                return Response({"detail": "Room deleted successfully."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "You are not the creator of this room, so you cannot delete it."},
+                            status=status.HTTP_403_FORBIDDEN)
 
 
 class RoomDetailView(APIView):
