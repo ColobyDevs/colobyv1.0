@@ -27,8 +27,11 @@ from django.contrib import messages
 from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
-from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.urls import reverse
+from django.db.models import Q
+from django.core.exceptions import ValidationError, FieldError
+from django.core.paginator import Paginator
 from .forms import TaskForm, CommentForm, UploadedFileForm, BranchForm
 import string
 import random
@@ -521,3 +524,53 @@ def file_access_log(request, file_id):
     uploaded_file = get_object_or_404(UploadedFile, id=file_id)
     access_logs = FileAccessLog.objects.filter(file=uploaded_file)
     return render(request, 'file_manager/file_access_log.html', {'uploaded_file': uploaded_file, 'access_logs': access_logs})
+
+@login_required
+def search(request):
+    """Performs a search across multiple models and returns results in JSON format.
+
+    Requires authentication.
+
+    Args:
+    request (HttpRequest): The incoming HTTP request.
+
+    Returns:
+    JsonResponse: A JSON response containing search results for rooms, files, tasks, branches, and messages.
+
+    Raises:
+    ValueError: If the 'q' query parameter is not provided in the request.
+    """
+    try:
+        query = request.GET.get('q', '')
+        if not query:
+            raise ValueError("The 'q' parameter is required.")
+
+        all_results = []
+        all_results.extend(Room.objects.filter(Q(name__icontains=query)))
+        all_results.extend(UploadedFile.objects.filter(Q(file__icontains=query)))
+        all_results.extend(Task.objects.filter(Q(title__icontains=query)))
+        all_results.extend(Branch.objects.filter(Q(original_file__icontains=query)))
+        all_results.extend(Message.objects.filter(Q(message__icontains=query)))
+
+        paginator = Paginator(all_results, 25)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
+        return JsonResponse({
+            'results': [{'id': result.id, 'name': result.name} if isinstance(result, Room) else
+                        {'id': result.id, 'file': result.file.name} if isinstance(result, UploadedFile) else
+                        {'id': result.id, 'title': result.title} if isinstance(result, Task) else
+                        {'id': result.id, 'branch': result.original_file.file.name} if isinstance(result, Branch) else
+                        {'id': result.id, 'message': result.message} for result in page_obj],
+        })
+
+    except ValidationError as ve:
+        return JsonResponse({'error': str(ve)}, status=400)
+    
+    except FieldError as fe:
+        return JsonResponse({'error': str(fe)}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"}, status=500)
+
+# search for each room, file uploaded, task, branch, message***

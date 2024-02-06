@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block base %}
+
+    <input type="text" id="searchInput" placeholder="Search...">
+    <div id="searchResults"></div>
+
+    <script>
+        $('#searchInput').on('input', function() {
+            const query = $(this).val();
+            $.ajax({
+                url: '/search/',
+                data: { query: query },
+                success: function(response) {
+                    displayResults(response);
+                }
+            });
+        });
+
+        function displayResults(results) {
+            const resultsContainer = $('#searchResults');
+            resultsContainer.empty();
+
+            results.rooms.forEach(room => {
+                resultsContainer.append(`<p>Room: ${room.name}</p>`);
+            });
+
+            results.files.forEach(file => {
+                resultsContainer.append(`<p>File: ${file.file.name}</p>`)
+            });
+
+            results.tasks.forEach(task => {
+                resultsContainer.append(`<p>Task: ${task.title}</p>`)
+            });
+
+            results.branches.forEach(branches => {
+                resultsContainer.append(`<p>Branch: ${branch.original_file.file.name}</p>`)
+            });
+
+            results.messages.forEach(message => {
+                resultsContainer.append(`<p>Message: ${message.content}</p>`);
+            });
+
+        }
+    </script>
+
+{% endblock %}
+
