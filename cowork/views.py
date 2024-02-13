@@ -12,13 +12,13 @@ from serializers.serializers import (
     RoomSerializer,
     BranchSerializer, UserNoteSerializer,
     FeatureRequestSerializer,
-    UploadedFileSerializer
-
+    UploadedFileSerializer,
+    NotificationSerializer
 )
 from .models import (Task, Comment, Room, Message,
                      UploadedFile,
                      FileAccessLog, Branch,
-                     UserNote, FeatureRequest
+                     UserNote, FeatureRequest, Notification
                      )
 
 
@@ -574,3 +574,24 @@ def search(request):
         return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"}, status=500)
 
 # search for each room, file uploaded, task, branch, message***
+
+class NotificationList(generics.ListAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+class NotificationDetail(generics.RetrieveAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+class MarkNotificationAsRead(generics.UpdateAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+    def patch(self, request, *args, **kwargs):
+        try:
+            notification = self.get_object()
+            notification.is_read = True
+            notification.save()
+            return JsonResponse({'status': 'Notification marked as read.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"}, status=500)

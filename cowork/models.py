@@ -113,6 +113,7 @@ class Task(BaseModel):
     due_date = models.DateTimeField()
     assigned_to = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='tasks_created', default=User.objects.get(username='admin'))
 
     def __str__(self):
         return self.title
@@ -166,3 +167,14 @@ class FileAccessLog(BaseModel):
 
     def __str__(self):
         return f"{self.accessed_by.username} accessed {self.file.name} at {self.accessed_at} in {self.room.name}"
+    
+class Notification(BaseModel):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Activity: {self.message} carried out by {self.sender} in room: {self.room}"
+

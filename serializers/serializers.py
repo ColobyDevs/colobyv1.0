@@ -7,7 +7,7 @@ from django.contrib.auth.hashers import check_password
 from cowork.models import (
     Room, Task, Comment,
     Message, UploadedFile,
-    Branch, UserNote, FeatureRequest)
+    Branch, UserNote, FeatureRequest, Notification)
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
@@ -159,3 +159,9 @@ class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
         fields = ['original_file', 'content', 'description']
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'room', 'sender', 'message', 'timestamp', 'is_read']

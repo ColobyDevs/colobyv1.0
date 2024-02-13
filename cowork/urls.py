@@ -38,5 +38,10 @@ urlpatterns = [
     path('api/chat/get/<slug:room_slug>/', views.get_message, name='get-message'),
     path('api/room/create/', views.RoomViewSet.as_view({'post': 'create'})),
     path('api/room/<int:pk>/', views.RoomDetail.as_view(), name='room-detail'),
+
     path('search/', views.search, name='search'),
+
+    path('notifications/', views.NotificationList.as_view(), name='notification-list'),
+    path('notifications/<int:pk>/', views.NotificationDetail.as_view(), name='notification-detail'),
+    path('notifications/<int:pk>/mark-as-read/', views.MarkNotificationAsRead.as_view(), name='mark-notification-as-read'),
 ]
