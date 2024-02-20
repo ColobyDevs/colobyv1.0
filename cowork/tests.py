@@ -3,7 +3,7 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
-from .models import Room, UploadedFile, Message, Task
+from .models import Room, UploadedFile, Message, Task, Notification
 from serializers.serializers import TaskSerializer 
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -343,6 +343,75 @@ class FileAPITests(TestCase):
 
     #     updated_file = UploadedFile.objects.get(id=self.uploaded_file.id)
     #     self.assertNotEqual(updated_file.description, edited_desc)
+
+# @override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="media"))
+# class NotificationAPITests(TestCase):
+#     """Test cases for the Notification API endpoints.
+
+#     These tests cover retrieving lists and details of notifications, as well as marking them as read.
+#     """
+#     def setUp(self):
+#         """
+#         Creates a user, a room, and several notifications for testing purposes.
+#         """
+#         self.user = User.objects.create_user(username='testuser', email='test@example.com', password='password')
+
+#         self.room = Room.objects.create(name='Test Room', slug='test-room')
+
+#         # Some notifications
+#         self.notification1 = Notification.objects.create(user=self.user, message="Notification 1")
+#         self.notification2 = Notification.objects.create(user=self.user, message="Notification 2")
+#         self.notification3 = Notification.objects.create(user=self.user, message="Notification 3")
+
+#     def test_notification_list(self):
+#         """
+#         Tests retrieving a list of notifications for the authenticated user.
+
+#         - Authenticates a user with the client.
+#         - Sends a GET request to the notification list endpoint.
+#         - Asserts that the response status code is 200 (OK).
+#         - Asserts that the response data contains 3 notifications.
+#         """
+#         client = APIClient()
+#         client.force_authenticate(user=self.user)
+#         url = reverse('notification-list')
+#         response = client.get(url)
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#         self.assertEqual(len(response.data), 3)
+
+#     def test_notification_detail(self):
+#         """
+#         Tests retrieving a single notification by its ID.
+
+#         - Authenticates a user with the client.
+#         - Sends a GET request to the notification detail endpoint for a specific notification ID.
+#         - Asserts that the response status code is 200 (OK).
+#         - Asserts that the response data contains the expected notification message.
+#         """
+#         client = APIClient()
+#         client.force_authenticate(user=self.user)
+#         url = reverse('notification-detail', args=[self.notification1.id])
+#         response = client.get(url)
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#         self.assertEqual(response.data['message'], self.notification1.message)
+
+#     def test_mark_notification_as_read(self):
+#         """
+#         Tests marking a notification as read.
+
+#         - Authenticates a user with the client.
+#         - Sends a POST request to the mark-notification-as-read endpoint with a notification ID.
+#         - Asserts that the response status code is 200 (OK).
+#         - Refreshes the notification object from the database.
+#         - Asserts that the notification is now marked as read.
+#         """
+#         client = APIClient()
+#         client.force_authenticate(user=self.user)
+#         url = reverse('mark-notification-as-read', args=[self.notification1.id])
+#         response = client.post(url)
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#         self.notification1.refresh_from_db()
+#         self.assertTrue(self.notification1.read)
 
 
     @classmethod
