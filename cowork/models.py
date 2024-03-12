@@ -62,8 +62,8 @@ class BaseModel(models.Model):
 
 class Room(BaseModel):
     name = models.CharField(max_length=128)
-    unique_link = models.CharField(
-        max_length=50, unique=True, default=uuid.uuid4().hex[:50])
+    # unique_link = models.CharField(
+    #     max_length=50, unique=True, default=uuid.uuid4().hex[:50])
     slug = models.SlugField(unique=True)
     users = models.ManyToManyField(CustomUser)
     is_private = models.BooleanField(default=False)
@@ -148,52 +148,3 @@ class Comment(BaseModel):
 
 
 
-
-class UploadedFile(BaseModel):
-    file = models.FileField(upload_to='uploads/')
-    object_id = models.PositiveIntegerField(
-        null=True, blank=True, default=None)
-    content = HTMLField(default="<p>You put something here...</p>")
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="uploaded_files", default=None)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    description = models.TextField(blank=True)
-    access_permissions = models.ManyToManyField(
-        CustomUser, related_name="accessible_files", blank=True)
-    file_size = models.PositiveIntegerField(null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.file_size and self.file:
-            self.file_size = self.file.size
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.file.name
-
-
-class Branch(BaseModel):
-    original_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="uploaded_files_branch", default=None)
-    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    content = HTMLField(default="<p>Your changes go here...</p>")
-    description = models.TextField(blank=True)
-
-    def __str__(self):
-        return f"Branch of {self.original_file.file.name} by {self.created_by.username}"
-
-
-class Commit(BaseModel):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
-    uploader = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    description = models.TextField(blank=True)
-
-
-class UploadedFileVersion(BaseModel):
-    uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="uploaded_files_version", default=None)
-    commit = models.ForeignKey(Commit, on_delete=models.CASCADE)
-    file = models.FileField(upload_to='uploads/versions/')
-    description = models.TextField(blank=True)
-    file_size = models.PositiveIntegerField(null=True, blank=True)
