@@ -31,6 +31,7 @@ INSTALLED_APPS = [
 
     "accounts",
     "cowork",
+    # "clob",
     # "commands",
     "rest_framework",
     "rest_framework.authtoken",
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     # "debug_toolbar"
 
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
