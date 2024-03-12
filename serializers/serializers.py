@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from allauth.account.models import EmailAddress
@@ -6,8 +7,12 @@ from django.contrib.auth.hashers import check_password
 
 from cowork.models import (
     Room, Task, Comment,
-    Message, UploadedFile,
-    Branch, UserNote, FeatureRequest, Commit, UploadedFileVersion)
+    Message,
+    # UploadedFile,
+    # Branch,
+    UserNote, FeatureRequest,
+    #   Commit, UploadedFileVersion
+)
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
@@ -18,7 +23,7 @@ User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """
-        Serializer is for creating a new user
+    Serializer is for creating a new user
     """
     password = serializers.CharField(min_length=8, write_only=True)
 
@@ -30,14 +35,44 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     extra_fields = ['first_name', 'username']
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(**validated_data)
-        return user 
+        try:
+            user = CustomUser.objects.create_user(**validated_data)
+            return user
+        except ValidationError as e:
+            error_messages = []
+            for field, errors in e.message_dict.items():
+                if field == 'username' and 'unique' in errors[0]:
+                    error_messages.append("Username already taken.")
+                elif 'This field may not be blank.' in errors:
+                    error_messages.append(f"{field.capitalize()} is required.")
+                else:
+                    # Add other validation errors
+                    error_messages.append(errors[0])
+            raise serializers.ValidationError({
+                'success': False,
+                'message': error_messages
+            })
+
+    def to_representation(self, instance):
+        """
+        Transform the user instance to a response that includes success message
+        """
+        return {
+            "success": True,
+            "message": "Account created successfully",
+            "data": {
+                "email": instance.email,
+                "first_name": instance.first_name,
+                "username": instance.username
+            }
+        }
+
 
 class SignInSerializer(serializers.Serializer):
     """
     Serializer for signing in
     """
-    
+
     email = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
 
@@ -52,26 +87,25 @@ class SignInSerializer(serializers.Serializer):
                 "sucess": "false",
                 "message": "user doesn't exist"
             })
-    
+
         elif (user and user.check_password(attrs["password"])):
             return user
-        
+
         else:
             raise serializers.ValidationError({
                 "sucess": "false",
                 "message": "Invalid credentials"
             })
 
-    
     def to_representation(self, instance):
         user = User.objects.get(email=instance.email)
         refresh = RefreshToken.for_user(instance)
         return {
             "success": ["true"],
-            "refresh_token":str(refresh), 
+            "refresh_token": str(refresh),
             "access_token": str(refresh.access_token),
-	        "user_id": user.id
-            }
+            "user_id": user.id
+        }
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -83,23 +117,22 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         user = self.context["request"].user
-        
+
         if check_password(attrs["old_password"], user.password) is False:
             raise serializers.ValidationError({
-                            "old_password":"Please recheck the old password"
-                            })
-    
+                "old_password": "Please recheck the old password"
+            })
+
         elif attrs["new_password"] != attrs["confirm_new_password"]:
             raise serializers.ValidationError({
-                "confirm_password":"Please confirm the new password"
-                })
-        
+                "confirm_password": "Please confirm the new password"
+            })
+
         return attrs
-    
-    
-    
+
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
+
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -120,14 +153,13 @@ class RoomSerializer(serializers.ModelSerializer):
 
     def get_created_by(self, room):
         return room.created_by.username if room.created_by else None
-    
+
     def remove_user(self, room, user):
         if user in room.users.all():
             room.users.remove(user)
             return {"detail": f"User {user.username} removed from the room."}
         else:
             return {"detail": f"User {user.username} is not in the room."}
-        
 
 
 class UserNoteSerializer(serializers.Serializer):
@@ -145,6 +177,7 @@ class FeatureRequestSerializer(serializers.ModelSerializer):
 
 class SendMessageSerializer(serializers.ModelSerializer):
     media_file = serializers.FileField(allow_empty_file=True, required=False)
+
     class Meta:
         model = Message
         fields = "__all__"
@@ -160,7 +193,6 @@ class SendMessageSerializer(serializers.ModelSerializer):
         return message
 
 
-
 class ReceiveMessageSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.username")
 
@@ -174,7 +206,7 @@ class TaskSerializer(serializers.ModelSerializer):
         slug_field='username',
         queryset=CustomUser.objects.all(),
     )
-    due_date = serializers.DateField(format='%Y-%m-%d') 
+    due_date = serializers.DateField(format='%Y-%m-%d')
 
     class Meta:
         model = Task
@@ -188,10 +220,10 @@ class TaskSerializer(serializers.ModelSerializer):
 
         # Check if the assigned user is a member of the room (excluding the creator)
         if not (room.users.filter(id=value.id).exists() or value == creator):
-            raise serializers.ValidationError("The assigned user must be a member of the room or the room creator.")
+            raise serializers.ValidationError(
+                "The assigned user must be a member of the room or the room creator.")
 
         return value
-
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -199,45 +231,16 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
-class UploadedFileSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source="uploaded_by.username")
-    access_permissions = serializers.StringRelatedField(many=True)
-
-    class Meta:
-        model = UploadedFile
-        fields = ["file", "description", "owner",
-                  "access_permissions", "file_size", "room_id"]
-        read_only_fields = ['room']
-
-
-
-class BranchSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Branch
-        fields = ['original_file', 'content', 'description']
-
-
-        
-class UploadedFileVersionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UploadedFileVersion
-        fields = ["file", "description", "file_size"]
-
-class CommitSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Commit
-        fields = ['uploader', 'timestamp', 'description']
 
 class UpdateUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-        'first_name',
-        'email',
-        'last_name',
-        'username'
+            'first_name',
+            'email',
+            'last_name',
+            'username'
         ]
 
     def validate(self, attrs):
         return super().validate(attrs)
-    
