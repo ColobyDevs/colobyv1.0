@@ -39,18 +39,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             user = CustomUser.objects.create_user(**validated_data)
             return user
         except ValidationError as e:
-            error_messages = []
-            for field, errors in e.message_dict.items():
-                if field == 'username' and 'unique' in errors[0]:
-                    error_messages.append("Username already taken.")
+            errors = {}
+            for field, field_errors in e.message_dict.items():
+                if field == 'username' and 'unique' in field_errors[0]:
+                    errors[field] = "Username already taken."
                 elif 'This field may not be blank.' in errors:
-                    error_messages.append(f"{field.capitalize()} is required.")
+                    errors[field] = "Password is required. and should be at least 8 characters long."
                 else:
                     # Add other validation errors
-                    error_messages.append(errors[0])
+                     errors[field] = field_errors[0]
             raise serializers.ValidationError({
                 'success': False,
-                'message': error_messages
+                'message': errors
             })
 
     def to_representation(self, instance):
